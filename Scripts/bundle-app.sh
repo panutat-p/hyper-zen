@@ -29,8 +29,8 @@ fi
 mkdir -p "$BUILD_DIR"
 swiftc "${SWIFT_FLAGS[@]}"
 
-chmod +x "$ROOT/Scripts/build-app-icon.sh"
-"$ROOT/Scripts/build-app-icon.sh"
+chmod +x "$ROOT/Scripts/generate-icons.sh"
+"$ROOT/Scripts/generate-icons.sh" icns
 
 rm -rf "$APP_DIR"
 mkdir -p "$APP_DIR/Contents/MacOS"

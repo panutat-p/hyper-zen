@@ -12,8 +12,8 @@ tasks:
   icon:
     desc: Generate a 1024px app icon preview PNG and open it
     cmds:
-      - chmod +x Scripts/generate-icon-preview.sh
-      - Scripts/generate-icon-preview.sh
+      - chmod +x Scripts/generate-icons.sh
+      - Scripts/generate-icons.sh preview
       - open {{.ROOT_DIR}}/Design/AppIcon-preview.png
 
   build:cli:
@@ -24,9 +24,16 @@ tasks:
 
   test:
     desc: Run unit tests
+    dir: "{{.ROOT_DIR}}"
     cmds:
-      - chmod +x Scripts/run-tests.sh
-      - Scripts/run-tests.sh
+      - |
+        if ! swift -e 'import XCTest' 2>/dev/null; then
+          echo "Error: XCTest is not available in the active developer directory." >&2
+          echo "Install Xcode, then select it with:" >&2
+          echo "  sudo xcode-select -s /Applications/Xcode.app/Contents/Developer" >&2
+          exit 1
+        fi
+        swift test {{.CLI_ARGS}}
 
   build:cli-release:
     desc: Build release Hyperzen.app with swiftc (no Xcode required)

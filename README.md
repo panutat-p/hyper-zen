@@ -86,11 +86,13 @@ task unquarantine
 ```
 Hyperzen/           App source (menu bar UI, sleep prevention, icon rendering)
 Tests/              Unit tests (HyperzenCore)
-Scripts/            Build, icon generation, and DMG packaging
-Design/             App icon SVG and generated previews
+Scripts/            bundle-app.sh, generate-icons.sh, create-dmg.sh
+Design/             Generated icon previews (`task icon`; gitignored PNG)
 taskfile.yaml       Task definitions for build and release
 Package.swift       Swift package manifest (HyperzenCore + tests)
 ```
+
+**App icon** — `IconRenderer.swift` is the source of truth for the monkey mascot. Xcode builds use the committed PNGs in `Hyperzen/Assets.xcassets/AppIcon.appiconset/`. CLI builds (`task build:cli`) render icons at build time into `.build/AppIcon.icns` without modifying the asset catalog.
 
 ## How it works
 
