@@ -2,7 +2,7 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-APP_NAME="Hyperzen"
+APP_NAME="HyperZen"
 APP_DIR="$ROOT/.build/$APP_NAME.app"
 OUTPUT_DIR="${1:-$ROOT}"
 
