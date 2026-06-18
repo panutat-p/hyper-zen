@@ -16,9 +16,11 @@ SWIFT_FLAGS=(
   "$ROOT/Hyperzen/SleepPreventer.swift"
   "$ROOT/Hyperzen/IconRenderer.swift"
   "$ROOT/Hyperzen/ActivityNudger.swift"
+  "$ROOT/Hyperzen/AccessibilityGuard.swift"
   -framework AppKit
   -framework IOKit
   -framework CoreGraphics
+  -framework ApplicationServices
   -target "$TARGET"
 )
 

@@ -18,6 +18,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private lazy var idleFrame: NSImage = IconRenderer.makeStatusIdleIcon()
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        // Accessibility is required to post the activity nudges that keep the
+        // Mac awake. Without it, bail out with a clear error instead of running
+        // in a silently broken state.
+        guard AccessibilityGuard.enforce() else { return }
+
         setupStatusItem()
         observeScreenSleep()
         enableKeepAwakeByDefault()
