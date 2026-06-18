@@ -21,6 +21,10 @@ jobs:
         run: echo "VERSION=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
 
       - name: Build release app
+        env:
+          # Set APPLE_SIGNING_IDENTITY repo secret to a Developer ID certificate name
+          # to produce releases that can persist Accessibility grants on macOS 15+.
+          CODESIGN_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
         run: |
           chmod +x Scripts/bundle-app.sh Scripts/generate-icons.sh
           Scripts/bundle-app.sh release

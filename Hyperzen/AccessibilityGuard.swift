@@ -5,55 +5,67 @@ import ApplicationServices
 ///
 /// HyperZen posts synthetic HID events via `CGEvent` to reset the idle timer,
 /// which macOS only permits for apps trusted in
-/// System Settings ▸ Privacy & Security ▸ Accessibility. Without that grant the
-/// nudges silently fail, so the app refuses to run in a half-working state.
+/// System Settings ▸ Privacy & Security ▸ Accessibility. Keep-awake mode is
+/// disabled until that grant is present.
 enum AccessibilityGuard {
     static let alertTitle = "Accessibility Permission Required"
     static let openSettingsButtonTitle = "Open System Settings"
-    static let quitButtonTitle = "Quit"
+    static let dismissButtonTitle = "OK"
     static let accessibilitySettingsURLString =
-        "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility"
+        "x-apple.systempreferences:com.apple.settings.PrivacySecurity.extension?Privacy_Accessibility"
 
     static let alertMessage = """
-    HyperZen needs Accessibility access to keep your Mac awake by simulating \
-    user activity.
+    HyperZen needs Accessibility access to enable keep-awake mode.
 
     Open System Settings ▸ Privacy & Security ▸ Accessibility, enable \
-    HyperZen, then launch it again.
+    HyperZen, then choose Enable Keep Awake again.
+
+    If HyperZen is already listed, remove it with − and add \
+    /Applications/HyperZen.app again. App updates can invalidate an existing \
+    approval.
     """
 
     static var isTrusted: Bool {
         AXIsProcessTrusted()
     }
 
-    /// Returns `true` when Accessibility is granted. Otherwise presents a
-    /// blocking error modal and terminates the app, returning `false`.
+    /// Triggers the standard macOS prompt that offers to open Accessibility settings.
+    static func requestSystemPrompt() {
+        let promptKey = kAXTrustedCheckOptionPrompt.takeRetainedValue() as String
+        let options = [promptKey: true] as CFDictionary
+        _ = AXIsProcessTrustedWithOptions(options)
+    }
+
+    /// Re-checks permission for keep-awake. When still denied, presents
+    /// `showAccessRequiredWarning()` before returning `false` unless
+    /// `presentWarning` is `false` (used by unit tests).
     @discardableResult
-    static func enforce() -> Bool {
+    static func requireAccessForKeepAwake(presentWarning: Bool = true) -> Bool {
         if isTrusted { return true }
 
-        presentMissingAccessAlert()
-        NSApp.terminate(nil)
+        requestSystemPrompt()
+        if isTrusted { return true }
+
+        if presentWarning {
+            showAccessRequiredWarning()
+        }
         return false
     }
 
     static func makeMissingAccessAlert() -> NSAlert {
         let alert = NSAlert()
-        alert.alertStyle = .critical
+        alert.alertStyle = .warning
         alert.messageText = alertTitle
         alert.informativeText = alertMessage
         alert.addButton(withTitle: openSettingsButtonTitle)
-        alert.addButton(withTitle: quitButtonTitle)
+        alert.addButton(withTitle: dismissButtonTitle)
         return alert
     }
 
-    private static func presentMissingAccessAlert() {
-        // A menu bar (LSUIElement) app is not active by default, so the modal
-        // would otherwise open behind other windows.
+    static func showAccessRequiredWarning() {
         NSApp.activate(ignoringOtherApps: true)
 
         let alert = makeMissingAccessAlert()
-
         if alert.runModal() == .alertFirstButtonReturn {
             openAccessibilitySettings()
         }

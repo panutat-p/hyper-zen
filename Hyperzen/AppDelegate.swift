@@ -5,6 +5,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private let activityNudger = ActivityNudger()
     private var statusItem: NSStatusItem?
     private var toggleMenuItem: NSMenuItem?
+    private var hasAccessibility = false
 
     private var animationSource: DispatchSourceTimer?
     private var currentFrame = 0
@@ -18,15 +19,21 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private lazy var idleFrame: NSImage = IconRenderer.makeStatusIdleIcon()
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        // Accessibility is required to post the activity nudges that keep the
-        // Mac awake. Without it, bail out with a clear error instead of running
-        // in a silently broken state.
-        guard AccessibilityGuard.enforce() else { return }
-
         setupStatusItem()
         observeScreenSleep()
-        enableKeepAwakeByDefault()
-        updateUI()
+
+        hasAccessibility = AccessibilityGuard.isTrusted
+        if hasAccessibility {
+            enableKeepAwakeByDefault()
+            updateUI()
+        } else {
+            updateUI()
+            requestAccessibilityForKeepAwake()
+        }
+    }
+
+    func applicationDidBecomeActive(_ notification: Notification) {
+        recheckAccessibility()
     }
 
     func applicationWillTerminate(_ notification: Notification) {
@@ -34,6 +41,20 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         activityNudger.stop()
         NSWorkspace.shared.notificationCenter.removeObserver(self)
         sleepPreventer.disable()
+    }
+
+    @objc private func recheckAccessibility() {
+        let wasGranted = hasAccessibility
+        hasAccessibility = AccessibilityGuard.isTrusted
+
+        if !hasAccessibility && sleepPreventer.isEnabled {
+            try? setKeepAwakeEnabled(false)
+            updateUI()
+            return
+        }
+
+        guard hasAccessibility != wasGranted else { return }
+        updateUI()
     }
 
     private func observeScreenSleep() {
@@ -101,18 +122,45 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     @objc private func toggleKeepAwake(_ sender: NSMenuItem) {
+        let turningOn = !sleepPreventer.isEnabled
+
+        if turningOn {
+            requestAccessibilityForKeepAwake { [weak self] granted in
+                guard let self, granted else { return }
+                do {
+                    try self.setKeepAwakeEnabled(true)
+                    self.updateUI()
+                } catch {
+                    self.showErrorAlert(message: error.localizedDescription)
+                }
+            }
+            return
+        }
+
         do {
-            try setKeepAwakeEnabled(!sleepPreventer.isEnabled)
+            try setKeepAwakeEnabled(false)
             updateUI()
         } catch {
             showErrorAlert(message: error.localizedDescription)
         }
     }
 
+    /// Defers the permission flow so the warning modal is shown reliably after
+    /// launch and after the status-item menu closes.
+    private func requestAccessibilityForKeepAwake(
+        completion: ((Bool) -> Void)? = nil
+    ) {
+        DispatchQueue.main.async {
+            self.hasAccessibility = AccessibilityGuard.requireAccessForKeepAwake()
+            self.updateUI()
+            completion?(self.hasAccessibility)
+        }
+    }
+
     private func setKeepAwakeEnabled(_ enabled: Bool) throws {
         if enabled {
             try sleepPreventer.enable()
-            if !screensAsleep {
+            if !screensAsleep && hasAccessibility {
                 activityNudger.start()
             }
         } else {
@@ -155,7 +203,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         toggleMenuItem?.title = isEnabled ? "Disable Keep Awake" : "Enable Keep Awake"
 
         if isEnabled && !screensAsleep {
-            if !activityNudger.isRunning {
+            if hasAccessibility && !activityNudger.isRunning {
                 activityNudger.start()
             }
             startAnimation()
@@ -175,4 +223,3 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         alert.runModal()
     }
 }
-
