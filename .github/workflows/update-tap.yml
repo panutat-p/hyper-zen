@@ -1,0 +1,45 @@
+name: Update Homebrew Tap
+
+# This workflow runs inside the homebrew-hyperzen tap repo.
+# It is triggered by a repository_dispatch event from the hyper-zen release workflow.
+# Copy this file to: panutat-p/homebrew-hyperzen/.github/workflows/update-tap.yml
+
+on:
+  repository_dispatch:
+    types: [update-cask]
+
+permissions:
+  contents: write
+
+jobs:
+  update-cask:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout tap repo
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Update cask formula
+        env:
+          VERSION: ${{ github.event.client_payload.version }}
+          SHA256: ${{ github.event.client_payload.sha256 }}
+        run: |
+          CASK_FILE="Casks/hyperzen.rb"
+
+          sed -i "s/version \".*\"/version \"$VERSION\"/" "$CASK_FILE"
+          sed -i "s/sha256 \".*\"/sha256 \"$SHA256\"/" "$CASK_FILE"
+
+          echo "Updated to version $VERSION with sha256 $SHA256"
+          cat "$CASK_FILE"
+
+      - name: Commit and push
+        env:
+          VERSION: ${{ github.event.client_payload.version }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add Casks/hyperzen.rb
+          git commit -m "chore: bump hyperzen to v$VERSION"
+          git push

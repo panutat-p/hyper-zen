@@ -1,0 +1,73 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Extract version from tag
+        id: version
+        run: echo "VERSION=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+
+      - name: Build release app
+        run: |
+          chmod +x Scripts/bundle-app.sh Scripts/generate-icons.sh
+          Scripts/bundle-app.sh release
+
+      - name: Create DMG
+        run: |
+          chmod +x Scripts/create-dmg.sh
+          Scripts/create-dmg.sh "$GITHUB_WORKSPACE"
+
+      - name: Compute SHA256
+        id: sha256
+        run: |
+          SHA=$(shasum -a 256 Hyperzen.dmg | awk '{print $1}')
+          echo "SHA256=$SHA" >> "$GITHUB_OUTPUT"
+          echo "SHA256: $SHA"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: Hyperzen ${{ github.ref_name }}
+          body: |
+            ## Hyperzen ${{ github.ref_name }}
+
+            ### Install via Homebrew
+            ```bash
+            brew tap panutat-p/hyperzen
+            brew install --cask hyperzen
+            ```
+
+            ### Manual install
+            Download `Hyperzen.dmg` below, open it, and drag **Hyperzen.app** to Applications.
+
+            ---
+            **SHA256:** `${{ steps.sha256.outputs.SHA256 }}`
+          files: Hyperzen.dmg
+          draft: false
+          prerelease: false
+
+      - name: Trigger tap update
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          token: ${{ secrets.TAP_GITHUB_TOKEN }}
+          repository: panutat-p/homebrew-hyperzen
+          event-type: update-cask
+          client-payload: |
+            {
+              "version": "${{ steps.version.outputs.VERSION }}",
+              "sha256": "${{ steps.sha256.outputs.SHA256 }}"
+            }
