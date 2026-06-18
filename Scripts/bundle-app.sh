@@ -78,7 +78,8 @@ EOF
 printf 'APPL????' > "$APP_DIR/Contents/PkgInfo"
 
 if command -v codesign >/dev/null 2>&1; then
-  codesign --force --deep --sign - "$APP_DIR" 2>/dev/null || true
+  SIGN_IDENTITY="${CODESIGN_IDENTITY:--}"
+  codesign --force --deep --sign "$SIGN_IDENTITY" "$APP_DIR" 2>/dev/null || true
 fi
 
 xattr -cr "$APP_DIR" 2>/dev/null || true

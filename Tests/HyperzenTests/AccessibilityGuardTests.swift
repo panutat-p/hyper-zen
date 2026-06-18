@@ -10,30 +10,58 @@ final class AccessibilityGuardTests: XCTestCase {
     func testMissingAccessAlertContent() {
         let alert = AccessibilityGuard.makeMissingAccessAlert()
 
-        XCTAssertEqual(alert.alertStyle, .critical)
+        XCTAssertEqual(alert.alertStyle, .warning)
         XCTAssertEqual(alert.messageText, AccessibilityGuard.alertTitle)
         XCTAssertEqual(alert.informativeText, AccessibilityGuard.alertMessage)
         XCTAssertEqual(alert.buttons.map(\.title), [
             AccessibilityGuard.openSettingsButtonTitle,
-            AccessibilityGuard.quitButtonTitle,
+            AccessibilityGuard.dismissButtonTitle,
         ])
     }
 
-    func testAlertMessageExplainsAccessibilityRequirement() {
+    func testAlertMessageExplainsKeepAwakeRequiresAccessibility() {
         XCTAssertTrue(AccessibilityGuard.alertMessage.contains("HyperZen"))
         XCTAssertTrue(AccessibilityGuard.alertMessage.contains("Accessibility"))
-        XCTAssertTrue(AccessibilityGuard.alertMessage.contains("System Settings"))
+        XCTAssertTrue(AccessibilityGuard.alertMessage.contains("keep-awake"))
+        XCTAssertTrue(AccessibilityGuard.alertMessage.contains("Enable Keep Awake"))
+        XCTAssertTrue(AccessibilityGuard.alertMessage.contains("/Applications/HyperZen.app"))
     }
 
-    func testAccessibilitySettingsURLIsValid() {
+    func testAccessibilitySettingsURLTargetsModernSystemSettings() {
+        XCTAssertTrue(
+            AccessibilityGuard.accessibilitySettingsURLString.contains("PrivacySecurity.extension")
+        )
         XCTAssertNotNil(URL(string: AccessibilityGuard.accessibilitySettingsURLString))
     }
 
-    func testEnforceReturnsTrueWhenProcessIsTrusted() throws {
+    func testRequestSystemPromptDoesNotCrash() {
+        AccessibilityGuard.requestSystemPrompt()
+    }
+
+    func testRequireAccessForKeepAwakeReturnsTrueWhenProcessIsTrusted() throws {
         guard AccessibilityGuard.isTrusted else {
             throw XCTSkip("Test runner does not have Accessibility permission")
         }
 
-        XCTAssertTrue(AccessibilityGuard.enforce())
+        XCTAssertTrue(AccessibilityGuard.requireAccessForKeepAwake(presentWarning: false))
+        XCTAssertTrue(AccessibilityGuard.requireAccessForKeepAwake())
+    }
+
+    func testRequireAccessForKeepAwakeReturnsFalseWhenProcessIsUntrusted() throws {
+        guard !AccessibilityGuard.isTrusted else {
+            throw XCTSkip("Test runner has Accessibility permission")
+        }
+
+        XCTAssertFalse(AccessibilityGuard.requireAccessForKeepAwake(presentWarning: false))
+    }
+
+    func testRequireAccessForKeepAwakeShortCircuitsWhenAlreadyTrusted() throws {
+        guard AccessibilityGuard.isTrusted else {
+            throw XCTSkip("Test runner does not have Accessibility permission")
+        }
+
+        XCTAssertTrue(AccessibilityGuard.isTrusted)
+        XCTAssertTrue(AccessibilityGuard.requireAccessForKeepAwake(presentWarning: false))
+        XCTAssertTrue(AccessibilityGuard.isTrusted)
     }
 }
