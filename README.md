@@ -143,8 +143,8 @@ After step 7, `brew upgrade --cask hyperzen` will pull the new version for all u
 | Build app | `Scripts/bundle-app.sh release` | Compiles with `swiftc -O`, bundles `Info.plist` and icon |
 | Create DMG | `Scripts/create-dmg.sh` | Adds Applications symlink, compresses with UDZO |
 | Compute SHA256 | `shasum -a 256` | Written to `GITHUB_OUTPUT` for downstream steps |
-| GitHub Release | `softprops/action-gh-release@v2` | Creates release, attaches DMG, sets release notes |
-| Tap dispatch | `peter-evans/repository-dispatch@v3` | Fires `update-cask` event on `panutat-p/homebrew-tap` |
+| GitHub Release | `softprops/action-gh-release@v3` | Creates release, attaches DMG, sets release notes |
+| Tap dispatch | `peter-evans/repository-dispatch@v4` | Fires `update-cask` event on `panutat-p/homebrew-tap` |
 
 ### Secrets
 
