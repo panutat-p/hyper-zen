@@ -28,13 +28,32 @@ Pick the template that matches the change. Do **not** include a Test Plan sectio
 1. **Problem** — What is broken? Where does it show up in the app?
 2. **Root Cause** — Why it happens (IOPMAssertion lifecycle, menu bar state, timer scheduling, etc.)
 3. **Solution** — What was changed and why that fixes it
+4. **Code changes** — Table of every file touched (see below)
 
 #### New feature
 
 1. **Overview** — What the feature does and why it is needed
 2. **Implementation** — How it was built: key files, approach, and notable design choices
+3. **Code changes** — Table of every file touched (see below)
 
 Optional: add a diagram (mermaid) when the change involves power-management flow, timer scheduling, or build pipeline steps.
+
+#### Code changes (required)
+
+Every PR body must end with a **Code changes** section: a markdown table listing **every file** in the PR diff.
+
+Use `git diff <base>...HEAD --stat` (or `gh pr diff [number] --stat`) to enumerate files. Group rows by area (App, Assets, Tests, Build, Project, Docs, Tooling, etc.). One row per file or logical path (e.g. `Hyperzen/Assets.xcassets/AppIcon.appiconset/*`).
+
+| Area | File | Change |
+|------|------|--------|
+| App | `Hyperzen/SleepPreventer.swift` | Short description of what changed |
+| Build | `Scripts/generate-icons.sh` | Short description of what changed |
+
+- **Area** — coarse category for scanning (App, Assets, Tests, Build, Project, Docs, Tooling)
+- **File** — path relative to repo root, in backticks
+- **Change** — one-line summary (added, removed, renamed, or what behavior changed)
+
+For large/binary-only paths (icon PNGs), one grouped row is fine. Do not omit files from the diff.
 
 ### Create PR
 
@@ -54,6 +73,13 @@ Optional: add a diagram (mermaid) when the change involves power-management flow
 
    - Register `applicationWillTerminate` in `AppDelegate`
    - Call `SleepPreventer.disable()` to release both system and display assertions
+
+   ## Code changes
+
+   | Area | File | Change |
+   |------|------|--------|
+   | App | `Hyperzen/AppDelegate.swift` | Call `SleepPreventer.disable()` in `applicationWillTerminate` |
+   | App | `Hyperzen/SleepPreventer.swift` | Ensure `disable()` releases system and display assertions |
    EOF
    )"`
 
@@ -69,6 +95,13 @@ Optional: add a diagram (mermaid) when the change involves power-management flow
    - Observe `NSWorkspace.screensDidSleepNotification` in `AppDelegate`
    - Pause `IconRenderer` animation on sleep and resume on wake
    - Gate resume on keep-awake being enabled so idle state stays static
+
+   ## Code changes
+
+   | Area | File | Change |
+   |------|------|--------|
+   | App | `Hyperzen/AppDelegate.swift` | Observe screen sleep/wake; pause and resume icon animation |
+   | App | `Hyperzen/IconRenderer.swift` | Add pause/resume hooks for menu bar frame cycling |
    EOF
    )"`
 
@@ -114,4 +147,5 @@ Optional: add a diagram (mermaid) when the change involves power-management flow
 - Omit `[number]` to target the PR for the current branch.
 - Use `--web` on any command to open that PR in the browser.
 - `gh pr view --json title,body,reviews,reviewRequests` for structured data.
-- When updating an existing PR with `gh pr edit --body`, keep the same template sections (bug fix: Problem, Root Cause, Solution; new feature: Overview, Implementation).
+- When updating an existing PR with `gh pr edit --body`, keep the same template sections (bug fix: Problem, Root Cause, Solution, Code changes; new feature: Overview, Implementation, Code changes).
+- Regenerate the **Code changes** table when new commits are pushed to the PR branch.
