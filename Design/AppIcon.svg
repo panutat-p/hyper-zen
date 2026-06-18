@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Reference: standing monkey + json-swift face -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" fill="none">
+  <defs>
+    <linearGradient id="bg" x1="512" y1="0" x2="512" y2="1024" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#9A6B45"/>
+      <stop offset="1" stop-color="#6B4423"/>
+    </linearGradient>
+  </defs>
+  <rect width="1024" height="1024" fill="url(#bg)"/>
+  <g fill="#FFFFFF" stroke="#FFFFFF" stroke-linecap="round">
+    <path stroke-width="57" fill="none" d="M 430 520 L 400 280"/>
+    <path stroke-width="57" fill="none" d="M 594 520 L 624 280"/>
+    <path stroke-width="57" fill="none" d="M 390 620 L 300 380"/>
+    <path stroke-width="57" fill="none" d="M 634 620 L 724 380"/>
+    <ellipse cx="512" cy="500" rx="160" ry="166"/>
+  </g>
+  <g fill="#FFFFFF">
+    <ellipse cx="340" cy="700" rx="106" ry="83"/>
+    <ellipse cx="684" cy="700" rx="106" ry="83"/>
+    <circle cx="512" cy="700" r="186"/>
+  </g>
+  <g fill="#5C3A21">
+    <ellipse cx="340" cy="700" rx="51" ry="40"/>
+    <ellipse cx="684" cy="700" rx="51" ry="40"/>
+    <rect x="420" y="748" width="178" height="104" rx="47"/>
+    <circle cx="449" cy="667" r="23"/>
+    <circle cx="575" cy="667" r="23"/>
+  </g>
+  <circle cx="512" cy="767" r="19" fill="#FFFFFF"/>
+</svg>
