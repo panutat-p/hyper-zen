@@ -91,3 +91,19 @@ tasks:
     cmds:
       - xattr -rd com.apple.quarantine "{{.BUNDLE_APP}}" 2>/dev/null || true
       - xattr -rd com.apple.quarantine "{{.ROOT_DIR}}/Hyperzen.dmg" 2>/dev/null || true
+
+  accessibility:
+    desc: Open System Settings to Privacy & Security → Accessibility
+    cmds:
+      - open "x-apple.systempreferences:com.apple.settings.PrivacySecurity.extension?Privacy_Accessibility"
+
+  accessibility:reset:
+    desc: Reset HyperZen Accessibility permission (release and dev bundle IDs)
+    cmds:
+      - tccutil reset Accessibility com.hyperzen.HyperZen
+      - tccutil reset Accessibility com.hyperzen.Hyperzen
+
+  menubar:
+    desc: Open System Settings → Menu Bar
+    cmds:
+      - open "x-apple.systempreferences:com.apple.MenuBarSettings"
