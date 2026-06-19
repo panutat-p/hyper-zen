@@ -17,6 +17,7 @@ SWIFT_FLAGS=(
   "$ROOT/Hyperzen/IconRenderer.swift"
   "$ROOT/Hyperzen/ActivityNudger.swift"
   "$ROOT/Hyperzen/AccessibilityGuard.swift"
+  "$ROOT/Hyperzen/MenuBarVisibilityWatcher.swift"
   -framework AppKit
   -framework IOKit
   -framework CoreGraphics

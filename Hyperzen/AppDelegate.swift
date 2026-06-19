@@ -10,6 +10,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var animationSource: DispatchSourceTimer?
     private var currentFrame = 0
     private var screensAsleep = false
+    private let appLaunchedAt = Date()
 
     // ~2.5 FPS — slow gait, still light on CPU.
     private let animationInterval: TimeInterval = 0.4
@@ -20,6 +21,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         setupStatusItem()
+        scheduleMenuBarVisibilityCheck()
         observeScreenSleep()
 
         hasAccessibility = AccessibilityGuard.isTrusted
@@ -86,7 +88,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func setupStatusItem() {
         let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
+        item.autosaveName = "HyperZen"
+        item.isVisible = true
         item.button?.image = idleFrame
+        item.button?.toolTip = "HyperZen"
 
         let menu = NSMenu()
 
@@ -111,6 +116,25 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         item.menu = menu
         statusItem = item
+    }
+
+    private func scheduleMenuBarVisibilityCheck() {
+        Task { @MainActor in
+            MenuBarVisibilityWatcher.scheduleStartupCheck(
+                appLaunchedAt: appLaunchedAt,
+                statusItem: { [weak self] in self?.statusItem },
+                recreateStatusItem: { [weak self] in self?.recreateStatusItem() }
+            )
+        }
+    }
+
+    private func recreateStatusItem() {
+        if let existing = statusItem {
+            NSStatusBar.system.removeStatusItem(existing)
+            statusItem = nil
+        }
+        setupStatusItem()
+        updateUI()
     }
 
     private func enableKeepAwakeByDefault() {
