@@ -27,6 +27,34 @@ Run the command-line tool without installing it:
 swift run hyper-zen help
 ```
 
+## Homebrew
+
+Install the stable `hyper-zen` formula:
+
+```sh
+brew install panutat-p/tap/hyper-zen
+```
+
+The installed executable includes its release version. For example, version
+`0.1.0` installs `hyper-zen-0.1.0`:
+
+```sh
+hyper-zen-0.1.0 version
+brew services start hyper-zen
+```
+
+Hyper Zen requires Accessibility permission for Teams presence. After every
+upgrade, enable the newly installed executable in **System Settings > Privacy &
+Security > Accessibility**, remove the previous Hyper Zen entry, then restart
+the service:
+
+```sh
+brew upgrade hyper-zen
+brew services restart hyper-zen
+```
+
+Homebrew prints the exact versioned path to add during installation and upgrade.
+
 ## Command-line usage
 
 ```sh
