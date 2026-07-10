@@ -27,12 +27,15 @@ jobs:
           echo "VERSION=$VERSION" >> "$GITHUB_OUTPUT"
 
       - name: Test package
+        env:
+          HYPER_ZEN_VERSION: ${{ steps.version.outputs.VERSION }}
         run: swift test
 
       - name: Build universal executable
         id: build
         env:
           VERSION: ${{ steps.version.outputs.VERSION }}
+          HYPER_ZEN_VERSION: ${{ steps.version.outputs.VERSION }}
         run: |
           swift build -c release --triple arm64-apple-macosx13.0
           swift build -c release --triple x86_64-apple-macosx13.0

@@ -1,8 +1,6 @@
 import Foundation
 
 public enum HyperZen {
-    public static let version = "0.1.0"
-
     public static func sleep(seconds: Int) {
         Thread.sleep(forTimeInterval: TimeInterval(seconds))
     }
@@ -12,7 +10,7 @@ public enum HyperZen {
     }
 
     public static func getVersion() -> String {
-        version
+        HyperZenBuildInfo.version
     }
 
     public static func location() -> HyperZenPoint {
