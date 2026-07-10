@@ -37,10 +37,10 @@ brew install panutat-p/tap/hyper-zen
 
 The installed executable includes its release version without dots so macOS
 shows the full name in Accessibility settings. For example, version `1.2.3`
-installs `hyper-zen-v1_2_3`:
+installs `hyper-zen-v1-2-3`:
 
 ```sh
-hyper-zen-v1_2_3 version
+hyper-zen-v1-2-3 version
 brew services start hyper-zen
 ```
 

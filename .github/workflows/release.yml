@@ -25,7 +25,7 @@ jobs:
             exit 1
           fi
           echo "VERSION=$VERSION" >> "$GITHUB_OUTPUT"
-          echo "EXECUTABLE=hyper-zen-v${VERSION//./_}" >> "$GITHUB_OUTPUT"
+          echo "EXECUTABLE=hyper-zen-v${VERSION//./-}" >> "$GITHUB_OUTPUT"
 
       - name: Build universal executable
         id: build
