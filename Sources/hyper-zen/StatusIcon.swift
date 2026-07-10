@@ -121,7 +121,7 @@ final class StatusIconAppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private var accessibilityStatusText: String {
-        "Accessibility: \(HyperZenPermissions.isAccessibilityTrusted ? "Allowed" : "Required for Teams presence")"
+        "Accessibility: \(HyperZenPermissions.isAccessibilityTrusted ? "Allowed" : "Not Allowed")"
     }
 
     @discardableResult
