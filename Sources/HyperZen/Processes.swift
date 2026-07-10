@@ -1,11 +1,11 @@
 import AppKit
 import Foundation
 
-public enum RobotProcesses {
-    public static func all() -> [RobotProcess] {
+public enum HyperZenProcesses {
+    public static func all() -> [HyperZenProcess] {
         NSWorkspace.shared.runningApplications
             .map { app in
-                RobotProcess(
+                HyperZenProcess(
                     pid: app.processIdentifier,
                     name: app.localizedName ?? app.bundleIdentifier ?? "pid-\(app.processIdentifier)",
                     path: app.bundleURL?.path
@@ -55,7 +55,7 @@ public enum RobotProcesses {
 
     public static func kill(pid: Int32) throws {
         guard let app = NSRunningApplication(processIdentifier: pid) else {
-            throw RobotError.notFound("Process \(pid) was not found")
+            throw HyperZenError.notFound("Process \(pid) was not found")
         }
 
         if !app.terminate() {

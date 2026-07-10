@@ -1,7 +1,7 @@
 import ApplicationServices
 import Foundation
 
-public enum RobotPermissions {
+public enum HyperZenPermissions {
     public static var isAccessibilityTrusted: Bool {
         AXIsProcessTrusted()
     }

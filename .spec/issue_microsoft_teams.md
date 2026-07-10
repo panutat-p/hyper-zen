@@ -2,11 +2,11 @@
 
 ## Summary
 
-`robot-swift status-icon` kept macOS awake, but Microsoft Teams could still change the user's presence to **Away**.
+`hyper-zen status-icon` kept macOS awake, but Microsoft Teams could still change the user's presence to **Away**.
 
 The original implementation called `IOPMAssertionDeclareUserActivity` every 60 seconds. That informs macOS power management about activity, but it does not necessarily produce an input event that Teams recognizes when calculating presence.
 
-The RobotGo helper stayed online because it generated an actual mouse movement: one pixel to the right, followed by a return to the original position after 50 milliseconds.
+The helper stays online because it generates an actual mouse movement: one pixel to the right, followed by a return to the original position after 50 milliseconds.
 
 ## Root Cause
 
@@ -32,7 +32,7 @@ The helper continues to hold these power assertions:
 
 ## Accessibility Requirement
 
-macOS blocks synthetic input from an unauthorized background process. The `robot-swift` release executable must be enabled in:
+macOS blocks synthetic input from an unauthorized background process. The `hyper-zen` release executable must be enabled in:
 
 ```text
 System Settings > Privacy & Security > Accessibility
@@ -41,7 +41,7 @@ System Settings > Privacy & Security > Accessibility
 The exact executable is:
 
 ```text
-/Users/Panutat/app/robot-swift/.build/release/robot-swift
+/Users/Panutat/app/hyper-zen/.build/release/hyper-zen
 ```
 
 Without this permission, the power assertions may still keep the Mac awake, but Teams will not receive the synthetic mouse activity.
@@ -64,13 +64,13 @@ This confirms that the synthetic input reaches macOS when the background helper 
 Start or restart the installed LaunchAgent with:
 
 ```sh
-task robot-swift
+task hyper-zen
 ```
 
 The task runs:
 
 ```sh
-launchctl kickstart -k gui/$(id -u)/com.panutat.robot-swift.status-icon
+launchctl kickstart -k gui/$(id -u)/com.panutat.hyper-zen.status-icon
 ```
 
 `kickstart -k` terminates the existing instance and starts one replacement. It does not create duplicate helpers.

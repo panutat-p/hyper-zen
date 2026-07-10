@@ -2,7 +2,7 @@ import AppKit
 import CoreGraphics
 import Foundation
 
-public enum RobotWindows {
+public enum HyperZenWindows {
     public static func activeApplicationPID() -> Int32? {
         NSWorkspace.shared.frontmostApplication?.processIdentifier
     }
@@ -11,7 +11,7 @@ public enum RobotWindows {
         NSWorkspace.shared.frontmostApplication?.localizedName
     }
 
-    public static func list() -> [RobotWindow] {
+    public static func list() -> [HyperZenWindow] {
         guard let info = CGWindowListCopyWindowInfo([.optionOnScreenOnly, .excludeDesktopElements], kCGNullWindowID) as? [[String: Any]] else {
             return []
         }
@@ -32,17 +32,17 @@ public enum RobotWindows {
                 return nil
             }
 
-            return RobotWindow(
+            return HyperZenWindow(
                 id: id,
                 ownerPID: ownerPID,
                 ownerName: ownerName,
                 title: title,
-                bounds: RobotRect(bounds)
+                bounds: HyperZenRect(bounds)
             )
         }
     }
 
-    public static func windows(forPID pid: Int32) -> [RobotWindow] {
+    public static func windows(forPID pid: Int32) -> [HyperZenWindow] {
         list().filter { $0.ownerPID == pid }
     }
 
@@ -54,7 +54,7 @@ public enum RobotWindows {
         return windows(forPID: targetPID).first?.title
     }
 
-    public static func bounds(pid: Int32? = nil) -> RobotRect? {
+    public static func bounds(pid: Int32? = nil) -> HyperZenRect? {
         let targetPID = pid ?? activeApplicationPID()
         guard let targetPID else {
             return nil
@@ -65,7 +65,7 @@ public enum RobotWindows {
     @discardableResult
     public static func activate(pid: Int32) throws -> Bool {
         guard let app = NSRunningApplication(processIdentifier: pid) else {
-            throw RobotError.notFound("Process \(pid) was not found")
+            throw HyperZenError.notFound("Process \(pid) was not found")
         }
         return app.activate(options: [.activateAllWindows, .activateIgnoringOtherApps])
     }

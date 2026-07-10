@@ -3,17 +3,17 @@
 import PackageDescription
 
 let package = Package(
-    name: "robot-swift",
+    name: "hyper-zen",
     platforms: [
         .macOS(.v13)
     ],
     products: [
-        .library(name: "RobotSwift", targets: ["RobotSwift"]),
-        .executable(name: "robot-swift", targets: ["robot-swift"])
+        .library(name: "HyperZen", targets: ["HyperZen"]),
+        .executable(name: "hyper-zen", targets: ["hyper-zen"])
     ],
     targets: [
         .target(
-            name: "RobotSwift",
+            name: "HyperZen",
             linkerSettings: [
                 .linkedFramework("AppKit"),
                 .linkedFramework("ApplicationServices"),
@@ -22,12 +22,12 @@ let package = Package(
             ]
         ),
         .executableTarget(
-            name: "robot-swift",
-            dependencies: ["RobotSwift"]
+            name: "hyper-zen",
+            dependencies: ["HyperZen"]
         ),
         .testTarget(
-            name: "RobotSwiftTests",
-            dependencies: ["RobotSwift"]
+            name: "HyperZenTests",
+            dependencies: ["HyperZen"]
         )
     ]
 )

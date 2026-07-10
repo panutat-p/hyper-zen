@@ -52,22 +52,22 @@ public enum MouseButton: String, CaseIterable, Sendable {
     }
 }
 
-public enum RobotMouse {
+public enum HyperZenMouse {
     public static var eventSource: CGEventSource? {
         CGEventSource(stateID: .hidSystemState)
     }
 
-    public static func location() -> RobotPoint {
+    public static func location() -> HyperZenPoint {
         let point = CGEvent(source: eventSource)?.location ?? .zero
-        return RobotPoint(x: Int(point.x.rounded()), y: Int(point.y.rounded()))
+        return HyperZenPoint(x: Int(point.x.rounded()), y: Int(point.y.rounded()))
     }
 
-    public static func move(to point: RobotPoint) {
+    public static func move(to point: HyperZenPoint) {
         postMouse(type: .mouseMoved, at: point.cgPoint, button: .left)
     }
 
     public static func move(x: Int, y: Int) {
-        move(to: RobotPoint(x: x, y: y))
+        move(to: HyperZenPoint(x: x, y: y))
     }
 
     public static func moveRelative(dx: Int, dy: Int) {
@@ -76,7 +76,7 @@ public enum RobotMouse {
     }
 
     @discardableResult
-    public static func moveSmooth(to point: RobotPoint, duration: TimeInterval = 0.35, steps: Int = 40) -> Bool {
+    public static func moveSmooth(to point: HyperZenPoint, duration: TimeInterval = 0.35, steps: Int = 40) -> Bool {
         let start = location()
         let clampedSteps = max(1, steps)
         let sleepSeconds = max(0, duration) / Double(clampedSteps)
@@ -121,7 +121,7 @@ public enum RobotMouse {
         postMouse(type: button.upEvent, at: location().cgPoint, button: button.cgButton)
     }
 
-    public static func drag(to point: RobotPoint, button: MouseButton = .left, duration: TimeInterval = 0.2, steps: Int = 25) {
+    public static func drag(to point: HyperZenPoint, button: MouseButton = .left, duration: TimeInterval = 0.2, steps: Int = 25) {
         let start = location()
         let clampedSteps = max(1, steps)
         let sleepSeconds = max(0, duration) / Double(clampedSteps)

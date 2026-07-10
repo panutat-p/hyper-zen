@@ -2,10 +2,10 @@
 set -eu
 
 ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
-LABEL="com.panutat.robot-swift.status-icon"
+LABEL="com.panutat.hyper-zen.status-icon"
 PLIST="$HOME/Library/LaunchAgents/$LABEL.plist"
-BIN="$ROOT_DIR/.build/release/robot-swift"
-LOG_DIR="$HOME/Library/Logs/robot-swift"
+BIN="$ROOT_DIR/.build/release/hyper-zen"
+LOG_DIR="$HOME/Library/Logs/hyper-zen"
 
 cd "$ROOT_DIR"
 swift build -c release
