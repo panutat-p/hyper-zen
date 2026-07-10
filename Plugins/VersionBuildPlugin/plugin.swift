@@ -5,7 +5,7 @@ import PackagePlugin
 struct VersionBuildPlugin: BuildToolPlugin {
     func createBuildCommands(context: PluginContext, target: Target) throws -> [Command] {
         let generator = try context.tool(named: "VersionGenerator")
-        let version = ProcessInfo.processInfo.environment["HYPER_ZEN_VERSION"] ?? "development"
+        let version = ProcessInfo.processInfo.environment["HYPER_ZEN_VERSION"] ?? "dev"
 
         return [
             .prebuildCommand(
