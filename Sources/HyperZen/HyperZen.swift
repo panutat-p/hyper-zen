@@ -1,7 +1,7 @@
 import Foundation
 
 public enum HyperZen {
-    public static let version = "0.1.0"
+    public static let version = "0.1.2"
 
     public static func sleep(seconds: Int) {
         Thread.sleep(forTimeInterval: TimeInterval(seconds))
