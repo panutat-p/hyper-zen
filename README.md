@@ -36,10 +36,10 @@ brew install panutat-p/tap/hyper-zen
 ```
 
 The installed executable includes its release version. For example, version
-`0.1.2` installs `hyper-zen-0.1.2`:
+`1.2.3` installs `hyper-zen-1.2.3`:
 
 ```sh
-hyper-zen-0.1.2 version
+hyper-zen-1.2.3 version
 brew services start hyper-zen
 ```
 
