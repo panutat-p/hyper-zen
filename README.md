@@ -1,197 +1,64 @@
-# HyperZen
+# robot-swift
 
-A lightweight macOS menu bar app that keeps your Mac awake. HyperZen lives in the status bar, prevents system and display sleep, and nudges the HID idle timer so long-running tasks are not interrupted by power management.
+Native macOS Swift rewrite of the useful RobotGo surface area for this app. It uses Apple frameworks directly instead of Go plus C shims:
 
-## Features
+- CoreGraphics for mouse, keyboard, scrolling, and display geometry.
+- AppKit for clipboard, process, window, activation, and alerts.
+- Swift Package Manager for a library target (`RobotSwift`) and a CLI (`robot-swift`).
 
-- **Menu bar only** — no Dock icon; runs quietly in the background.
-- **Keep awake by default** — enabled on launch; toggle from the menu bar icon.
-- **System + display assertions** — uses `IOPMAssertion` to block both idle system sleep and display sleep (similar to Amphetamine's default behavior).
-- **Activity nudges** — posts a zero-distance mouse-move event every 5 minutes to reset the HID idle timer.
-- **Animated status icon** — a running monkey when keep-awake is active; static icon when disabled.
-- **Screen-aware** — pauses animation and nudges while the display is asleep; resumes when screens wake.
+## Build
 
-## Install
-
-### Homebrew (recommended)
-
-```bash
-brew tap panutat-p/tap
-brew install --cask hyperzen
+```sh
+swift build
 ```
 
-To upgrade later:
+## Try it
 
-```bash
-brew upgrade --cask hyperzen
+```sh
+swift run robot-swift permissions --prompt
+swift run robot-swift status-icon
+swift run robot-swift pos
+swift run robot-swift move 300 300
+swift run robot-swift click left
+swift run robot-swift key a cmd
+swift run robot-swift type "hello from Swift"
+swift run robot-swift copy "clipboard text"
+swift run robot-swift paste
+swift run robot-swift windows
 ```
 
-To uninstall:
+macOS will require Accessibility permission for input automation. This package does not request Screen/System Recording permission.
 
-```bash
-brew uninstall --cask hyperzen
+`status-icon` keeps the terminal process alive, shows a small menu bar icon, holds macOS idle system/display sleep assertions, and declares user activity every 60 seconds while it is running. It also briefly moves the pointer by one pixel and returns it, mirroring the RobotGo helper so presence-aware apps such as Microsoft Teams receive an input event. Accessibility permission is required for that input nudge. Quit it from the menu bar item or press Control-C in the terminal.
+
+## Start At Login
+
+```sh
+scripts/install-startup.sh
 ```
 
-### Manual
+This builds the release binary and installs a user LaunchAgent at `~/Library/LaunchAgents/com.panutat.robot-swift.status-icon.plist`.
 
-1. Download `HyperZen.dmg` from the [latest release](https://github.com/panutat-p/hyper-zen/releases/latest)
-2. Open the DMG and drag **HyperZen.app** to **Applications**
-3. Launch HyperZen from Applications or Spotlight
+To remove it:
 
-> If macOS shows a Gatekeeper warning, run:
-> ```bash
-> xattr -cr /Applications/HyperZen.app
-> ```
-
-## Requirements
-
-- macOS 13.0 (Ventura) or later
-- [Task](https://taskfile.dev/) (recommended for local builds)
-- **Optional:** Xcode (for `xcodebuild` builds and unit tests)
-
-The app can be built with `swiftc` alone — Xcode is not required to compile or run HyperZen.
-
-## Quick start
-
-```bash
-# Build and launch
-task dev
+```sh
+scripts/uninstall-startup.sh
 ```
 
-The built app is at `.build/HyperZen.app`.
+## Library example
 
-## Build commands
+```swift
+import RobotSwift
 
-| Command | Description |
-|---------|-------------|
-| `task build` | Build Debug (Xcode if available, otherwise `swiftc`) |
-| `task dev` | Build Debug and open the app |
-| `task release` | Build Release and create `HyperZen.dmg` in the project root |
-| `task build:cli` | Build Debug with `swiftc` (no Xcode) |
-| `task build:cli-release` | Build Release with `swiftc` (no Xcode) |
-| `task test` | Run unit tests via Swift Package Manager |
-| `task icon` | Generate a 1024px app icon preview and open it |
-| `task unquarantine` | Remove Gatekeeper quarantine flags from the built app and DMG |
+Robot.move(x: 300, y: 300)
+Robot.click()
+try Robot.keyTap("v", modifiers: ["cmd"])
+try Robot.writeClipboard("Hello")
 
-### Xcode
-
-Open `Hyperzen.xcodeproj` and build the **Hyperzen** scheme, or use:
-
-```bash
-xcodebuild -project Hyperzen.xcodeproj -scheme Hyperzen -configuration Debug build
+let size = Robot.screenSize()
+print(size.width, size.height)
 ```
 
-### Swift Package Manager
+## Scope
 
-Core logic is exposed as the `HyperzenCore` target for testing:
-
-```bash
-swift test
-```
-
-> Unit tests require XCTest. If `swift test` fails, install Xcode and select it:
->
-> ```bash
-> sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
-> ```
-
-## Usage
-
-1. Launch HyperZen — a monkey icon appears in the menu bar.
-2. Keep awake is **on** by default; the icon animates while active.
-3. Click the icon and choose **Disable Keep Awake** to turn it off, or **Quit HyperZen** to exit.
-
-## Release pipeline
-
-Releases are fully automated via GitHub Actions. Pushing a version tag triggers the entire pipeline — building, packaging, publishing, and updating the Homebrew formula — without any manual steps.
-
-### How to release
-
-```bash
-git tag v1.2.0
-git push origin v1.2.0
-```
-
-### What happens automatically
-
-```
-git push origin v1.2.0
-        │
-        ▼
-release.yml (this repo) — runs on macos-latest
-  1. Build HyperZen.app     Scripts/bundle-app.sh release
-  2. Package HyperZen.dmg   Scripts/create-dmg.sh
-  3. Compute SHA256          shasum -a 256 HyperZen.dmg
-  4. Publish GitHub Release  HyperZen.dmg attached, SHA256 in release notes
-  5. Dispatch to tap         POST /repos/panutat-p/homebrew-tap/dispatches
-        │
-        │  payload: { cask, version, sha256 }
-        ▼
-update-tap.yml (panutat-p/homebrew-tap)
-  6. Patch Casks/hyperzen.rb  version + sha256 replaced via sed
-  7. Commit and push          "chore: bump hyperzen to v1.2.0"
-```
-
-After step 7, `brew upgrade --cask hyperzen` will pull the new version for all users.
-
-### Workflow file
-
-`.github/workflows/release.yml` — triggered on `v*.*.*` tag push.
-
-| Step | Tool | Notes |
-|------|------|-------|
-| Build app | `Scripts/bundle-app.sh release` | Compiles with `swiftc -O`, bundles `Info.plist` and icon |
-| Create DMG | `Scripts/create-dmg.sh` | Adds Applications symlink, compresses with UDZO |
-| Compute SHA256 | `shasum -a 256` | Written to `GITHUB_OUTPUT` for downstream steps |
-| GitHub Release | `softprops/action-gh-release@v3` | Creates release, attaches DMG, sets release notes |
-| Tap dispatch | `peter-evans/repository-dispatch@v4` | Fires `update-cask` event on `panutat-p/homebrew-tap` |
-
-### Secrets
-
-| Secret | Repo | Purpose |
-|--------|------|---------|
-| `TAP_GITHUB_TOKEN` | `hyper-zen` | Classic PAT with `repo` scope — authorises the `repository_dispatch` call to `homebrew-tap` |
-| `GITHUB_TOKEN` | `homebrew-tap` | Auto-injected by GitHub Actions — used by `update-tap.yml` to push the formula bump |
-
-### Homebrew tap
-
-The shared tap repo is [panutat-p/homebrew-tap](https://github.com/panutat-p/homebrew-tap).
-
-```
-homebrew-tap/
-  Casks/
-    hyperzen.rb      ← patched automatically on each release
-    json-young.rb
-  .github/workflows/
-    update-tap.yml   ← receives dispatch, patches formula, pushes bump
-```
-
-The tap is shared across all panutat-p macOS apps. Adding a new app only requires:
-1. Adding a new `.rb` file to `Casks/` in the tap repo
-2. Adding `release.yml` to the app repo with the correct `cask` name in the dispatch payload
-
-## Project structure
-
-```
-Hyperzen/           App source (menu bar UI, sleep prevention, icon rendering)
-Tests/              Unit tests (HyperzenCore)
-Scripts/            bundle-app.sh, generate-icons.sh, create-dmg.sh
-Design/             Generated icon previews (task icon; gitignored PNG)
-.github/workflows/  release.yml — automated build, release, and tap update
-taskfile.yaml       Task definitions for build and release
-Package.swift       Swift package manifest (HyperzenCore + tests)
-```
-
-**App icon** — `IconRenderer.swift` is the source of truth for the monkey mascot. Xcode builds use the committed PNGs in `Hyperzen/Assets.xcassets/AppIcon.appiconset/`. CLI builds (`task build:cli`) render icons at build time into `.build/AppIcon.icns` without modifying the asset catalog.
-
-## How it works
-
-**Sleep prevention** — `SleepPreventer` creates two IOKit power assertions: one for user-idle system sleep and one for display sleep. Assertions are released when keep-awake is disabled or the app quits.
-
-**Activity nudges** — `ActivityNudger` fires every 300 seconds, posting a `mouseMoved` event at the current cursor position. The move has zero distance but resets the HID idle timer.
-
-**Menu bar icon** — `IconRenderer` draws the monkey mascot programmatically; `AppDelegate` cycles through animation frames at ~2.5 FPS while keep-awake is active and the screen is on.
-
-## License
-
-Not specified.
+This is intentionally macOS-native. The original RobotGo project supports Windows and Linux through C/X11/Win32 backends; this rewrite replaces that portability layer with direct Apple APIs and omits screenshot/pixel-capture features that would require Screen/System Recording permission.
