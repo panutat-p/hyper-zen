@@ -1,6 +1,6 @@
 import Foundation
 
-public enum Robot {
+public enum HyperZen {
     public static let version = "0.1.0"
 
     public static func sleep(seconds: Int) {
@@ -15,35 +15,35 @@ public enum Robot {
         version
     }
 
-    public static func location() -> RobotPoint {
-        RobotMouse.location()
+    public static func location() -> HyperZenPoint {
+        HyperZenMouse.location()
     }
 
     public static func move(x: Int, y: Int) {
-        RobotMouse.move(x: x, y: y)
+        HyperZenMouse.move(x: x, y: y)
     }
 
     public static func click(_ button: MouseButton = .left, doubleClick: Bool = false) {
-        RobotMouse.click(button, doubleClick: doubleClick)
+        HyperZenMouse.click(button, doubleClick: doubleClick)
     }
 
     public static func keyTap(_ key: String, modifiers: [String] = []) throws {
-        try RobotKeyboard.keyTap(key, modifiers: modifiers)
+        try HyperZenKeyboard.keyTap(key, modifiers: modifiers)
     }
 
     public static func typeText(_ text: String, delay: TimeInterval = 0) {
-        RobotKeyboard.typeText(text, delay: delay)
+        HyperZenKeyboard.typeText(text, delay: delay)
     }
 
     public static func readClipboard() -> String {
-        RobotClipboard.read()
+        HyperZenClipboard.read()
     }
 
     public static func writeClipboard(_ text: String) throws {
-        try RobotClipboard.write(text)
+        try HyperZenClipboard.write(text)
     }
 
-    public static func screenSize() -> RobotSize {
-        RobotScreen.screenSize()
+    public static func screenSize() -> HyperZenSize {
+        HyperZenScreen.screenSize()
     }
 }

@@ -1,5 +1,5 @@
 import Foundation
-import RobotSwift
+import HyperZen
 
 struct CommandError: LocalizedError {
     let errorDescription: String?
@@ -28,46 +28,46 @@ func run(_ arguments: [String]) throws {
         runStatusIcon()
 
     case "version":
-        print(Robot.getVersion())
+        print(HyperZen.getVersion())
 
     case "permissions":
         let prompt = args.contains("--prompt")
-        let accessibility = prompt ? RobotPermissions.requestAccessibilityIfNeeded() : RobotPermissions.isAccessibilityTrusted
+        let accessibility = prompt ? HyperZenPermissions.requestAccessibilityIfNeeded() : HyperZenPermissions.isAccessibilityTrusted
         print("accessibility=\(accessibility)")
 
     case "pos", "location":
-        let point = Robot.location()
+        let point = HyperZen.location()
         print("\(point.x) \(point.y)")
 
     case "move":
         let (x, y) = try twoInts(args, usage: "move X Y")
-        Robot.move(x: x, y: y)
+        HyperZen.move(x: x, y: y)
 
     case "move-smooth":
         let (x, y) = try twoInts(args, usage: "move-smooth X Y [duration]")
         let duration = args.count > 2 ? (Double(args[2]) ?? 0.35) : 0.35
-        RobotMouse.moveSmooth(to: RobotPoint(x: x, y: y), duration: duration)
+        HyperZenMouse.moveSmooth(to: HyperZenPoint(x: x, y: y), duration: duration)
 
     case "click":
         let button = try mouseButton(args.first ?? "left")
-        Robot.click(button, doubleClick: args.contains("--double"))
+        HyperZen.click(button, doubleClick: args.contains("--double"))
 
     case "drag":
         guard args.count >= 2, let x = Int(args[0]), let y = Int(args[1]) else {
             throw CommandError(errorDescription: "Usage: drag X Y [left|right|middle]")
         }
         let button = try mouseButton(args.count > 2 ? args[2] : "left")
-        RobotMouse.drag(to: RobotPoint(x: x, y: y), button: button)
+        HyperZenMouse.drag(to: HyperZenPoint(x: x, y: y), button: button)
 
     case "scroll":
         let (dx, dy) = try twoInts(args, usage: "scroll DX DY")
-        RobotMouse.scroll(dx: dx, dy: dy)
+        HyperZenMouse.scroll(dx: dx, dy: dy)
 
     case "key":
         guard let key = args.first else {
             throw CommandError(errorDescription: "Usage: key KEY [MODIFIER...]")
         }
-        try Robot.keyTap(key, modifiers: Array(args.dropFirst()))
+        try HyperZen.keyTap(key, modifiers: Array(args.dropFirst()))
 
     case "type":
         guard !args.isEmpty else {
@@ -76,50 +76,50 @@ func run(_ arguments: [String]) throws {
         let paste = args.contains("--paste")
         let text = args.filter { $0 != "--paste" }.joined(separator: " ")
         if paste {
-            try RobotKeyboard.pasteText(text)
+            try HyperZenKeyboard.pasteText(text)
         } else {
-            Robot.typeText(text)
+            HyperZen.typeText(text)
         }
 
     case "copy":
-        try Robot.writeClipboard(args.joined(separator: " "))
+        try HyperZen.writeClipboard(args.joined(separator: " "))
 
     case "paste":
-        print(Robot.readClipboard())
+        print(HyperZen.readClipboard())
 
     case "size":
-        let size = Robot.screenSize()
+        let size = HyperZen.screenSize()
         print("\(size.width) \(size.height)")
 
     case "displays":
-        for (index, id) in RobotScreen.displayIDs().enumerated() {
-            let rect = try RobotScreen.displayRect(index)
-            let scale = RobotScreen.scale(displayIndex: index)
+        for (index, id) in HyperZenScreen.displayIDs().enumerated() {
+            let rect = try HyperZenScreen.displayRect(index)
+            let scale = HyperZenScreen.scale(displayIndex: index)
             print("\(index): id=\(id) x=\(rect.x) y=\(rect.y) w=\(rect.width) h=\(rect.height) scale=\(scale)")
         }
 
     case "rect":
-        let index = args.first.flatMap(Int.init) ?? RobotScreen.mainDisplayIndex()
-        let rect = try RobotScreen.displayRect(index)
+        let index = args.first.flatMap(Int.init) ?? HyperZenScreen.mainDisplayIndex()
+        let rect = try HyperZenScreen.displayRect(index)
         print("\(rect.x) \(rect.y) \(rect.width) \(rect.height)")
 
     case "windows":
-        for window in RobotWindows.list() {
+        for window in HyperZenWindows.list() {
             let title = window.title.isEmpty ? "-" : window.title
             print("\(window.id) pid=\(window.ownerPID) \(window.ownerName) \(window.bounds.x),\(window.bounds.y),\(window.bounds.width),\(window.bounds.height) \(title)")
         }
 
     case "active":
-        print("\(RobotWindows.activeApplicationPID() ?? -1) \(RobotWindows.activeApplicationName() ?? "")")
+        print("\(HyperZenWindows.activeApplicationPID() ?? -1) \(HyperZenWindows.activeApplicationName() ?? "")")
 
     case "activate":
         guard let pidString = args.first, let pid = Int32(pidString) else {
             throw CommandError(errorDescription: "Usage: activate PID")
         }
-        print(try RobotWindows.activate(pid: pid))
+        print(try HyperZenWindows.activate(pid: pid))
 
     case "processes":
-        for process in RobotProcesses.all() {
+        for process in HyperZenProcesses.all() {
             print("\(process.pid) \(process.name) \(process.path ?? "")")
         }
 
@@ -127,19 +127,19 @@ func run(_ arguments: [String]) throws {
         guard let name = args.first else {
             throw CommandError(errorDescription: "Usage: find NAME")
         }
-        print(RobotProcesses.findIDs(named: name).map(String.init).joined(separator: " "))
+        print(HyperZenProcesses.findIDs(named: name).map(String.init).joined(separator: " "))
 
     case "kill":
         guard let pidString = args.first, let pid = Int32(pidString) else {
             throw CommandError(errorDescription: "Usage: kill PID")
         }
-        try RobotProcesses.kill(pid: pid)
+        try HyperZenProcesses.kill(pid: pid)
 
     case "alert":
         guard args.count >= 2 else {
             throw CommandError(errorDescription: "Usage: alert TITLE MESSAGE")
         }
-        print(RobotWindows.alert(title: args[0], message: args.dropFirst().joined(separator: " ")))
+        print(HyperZenWindows.alert(title: args[0], message: args.dropFirst().joined(separator: " ")))
 
     case "help", "-h", "--help":
         printUsage()
@@ -165,7 +165,7 @@ func mouseButton(_ value: String) throws -> MouseButton {
 
 func printUsage(toError: Bool = false) {
     let text = """
-    robot-swift: native macOS desktop automation
+    hyper-zen: native macOS desktop automation
 
     Commands:
       permissions [--prompt]

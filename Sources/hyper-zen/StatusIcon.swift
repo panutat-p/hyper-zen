@@ -2,7 +2,7 @@ import AppKit
 import CoreGraphics
 import Foundation
 import IOKit.pwr_mgt
-import RobotSwift
+import HyperZen
 
 @MainActor
 private var statusIconDelegate: StatusIconAppDelegate?
@@ -24,7 +24,7 @@ final class StatusIconAppDelegate: NSObject, NSApplicationDelegate {
 
         let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
         if let button = item.button {
-            if let image = NSImage(systemSymbolName: "bolt.circle.fill", accessibilityDescription: "robot-swift is running") {
+            if let image = NSImage(systemSymbolName: "bolt.circle.fill", accessibilityDescription: "hyper-zen is running") {
                 let sizeConfiguration = NSImage.SymbolConfiguration(pointSize: 16, weight: .regular)
                 let colorConfiguration = NSImage.SymbolConfiguration(paletteColors: [.systemYellow, .systemOrange])
                 let symbolConfiguration = sizeConfiguration.applying(colorConfiguration)
@@ -34,11 +34,11 @@ final class StatusIconAppDelegate: NSObject, NSApplicationDelegate {
             } else {
                 button.title = "R"
             }
-            button.toolTip = "robot-swift is running in Terminal"
+            button.toolTip = "hyper-zen is running in Terminal"
         }
 
         let menu = NSMenu()
-        addDisabledItem("robot-swift is running", to: menu)
+        addDisabledItem("hyper-zen is running", to: menu)
         addDisabledItem("PID \(ProcessInfo.processInfo.processIdentifier)", to: menu)
         addDisabledItem("Power Assertions: \(powerAssertions.statusText)", to: menu)
         addDisabledItem("Input nudge: Every \(Int(activityInterval)) seconds", to: menu)
@@ -121,7 +121,7 @@ final class StatusIconAppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private var accessibilityStatusText: String {
-        "Accessibility: \(RobotPermissions.isAccessibilityTrusted ? "Allowed" : "Required for Teams presence")"
+        "Accessibility: \(HyperZenPermissions.isAccessibilityTrusted ? "Allowed" : "Required for Teams presence")"
     }
 
     @discardableResult
@@ -156,14 +156,14 @@ private final class PowerAssertionController {
         if systemSleepAssertionID == 0 {
             systemSleepAssertionID = createAssertion(
                 type: kIOPMAssertionTypePreventUserIdleSystemSleep as CFString,
-                name: "robot-swift status-icon keep system awake"
+                name: "hyper-zen status-icon keep system awake"
             )
         }
 
         if displaySleepAssertionID == 0 {
             displaySleepAssertionID = createAssertion(
                 type: kIOPMAssertionTypePreventUserIdleDisplaySleep as CFString,
-                name: "robot-swift status-icon keep display awake"
+                name: "hyper-zen status-icon keep display awake"
             )
         }
     }
@@ -205,7 +205,7 @@ private var userActivityAssertionID = IOPMAssertionID(0)
 @MainActor
 private func declareUserActivity() {
     let result = IOPMAssertionDeclareUserActivity(
-        "robot-swift status-icon user activity" as CFString,
+        "hyper-zen status-icon user activity" as CFString,
         kIOPMUserActiveLocal,
         &userActivityAssertionID
     )
@@ -216,7 +216,7 @@ private func declareUserActivity() {
     postSyntheticActivity()
 
     if result != kIOReturnSuccess {
-        NSLog("robot-swift could not declare IOKit user activity (result: %d)", result)
+        NSLog("hyper-zen could not declare IOKit user activity (result: %d)", result)
     }
 }
 
@@ -229,7 +229,7 @@ private func postSyntheticActivity() {
     let nudged = CGPoint(x: current.x + 1, y: current.y)
     postMouseMove(to: nudged, from: current, source: source)
 
-    // Match the RobotGo helper's short move-and-return behavior while avoiding
+    // Move and return quickly while avoiding
     // moving the pointer back over a real user movement made in the meantime.
     DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
         guard let restoreSource = CGEventSource(stateID: .hidSystemState),
@@ -264,6 +264,6 @@ func runStatusIcon() {
     app.delegate = delegate
     app.setActivationPolicy(.accessory)
 
-    print("robot-swift status icon is running with macOS power assertions and an input nudge every 60 seconds. Use the menu bar Quit item or press Control-C in the terminal.")
+    print("hyper-zen status icon is running with macOS power assertions and an input nudge every 60 seconds. Use the menu bar Quit item or press Control-C in the terminal.")
     app.run()
 }

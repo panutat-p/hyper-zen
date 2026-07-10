@@ -2,7 +2,7 @@ import Carbon.HIToolbox
 import CoreGraphics
 import Foundation
 
-public enum RobotKeyboard {
+public enum HyperZenKeyboard {
     public static let keySleep: TimeInterval = 0.01
 
     private static let keyCodes: [String: CGKeyCode] = [
@@ -77,12 +77,12 @@ public enum RobotKeyboard {
     public static func keyToggle(_ key: String, down: Bool, modifiers: [String] = []) throws {
         let normalized = key.lowercased()
         guard let code = keyCodes[normalized] else {
-            throw RobotError.invalidArgument("Unknown key: \(key)")
+            throw HyperZenError.invalidArgument("Unknown key: \(key)")
         }
 
         let flags = flagsFromModifiers(modifiers)
         guard let event = CGEvent(keyboardEventSource: CGEventSource(stateID: .hidSystemState), virtualKey: code, keyDown: down) else {
-            throw RobotError.operationFailed("Could not create keyboard event for \(key)")
+            throw HyperZenError.operationFailed("Could not create keyboard event for \(key)")
         }
         event.flags = flags
         event.post(tap: .cghidEventTap)
@@ -114,7 +114,7 @@ public enum RobotKeyboard {
     }
 
     public static func pasteText(_ text: String) throws {
-        try RobotClipboard.write(text)
+        try HyperZenClipboard.write(text)
         try keyTap("v", modifiers: ["cmd"])
     }
 

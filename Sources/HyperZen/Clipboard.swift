@@ -1,7 +1,7 @@
 import AppKit
 import Foundation
 
-public enum RobotClipboard {
+public enum HyperZenClipboard {
     public static func read() -> String {
         NSPasteboard.general.string(forType: .string) ?? ""
     }
@@ -10,7 +10,7 @@ public enum RobotClipboard {
         let pasteboard = NSPasteboard.general
         pasteboard.clearContents()
         guard pasteboard.setString(text, forType: .string) else {
-            throw RobotError.operationFailed("Could not write to the clipboard")
+            throw HyperZenError.operationFailed("Could not write to the clipboard")
         }
     }
 }

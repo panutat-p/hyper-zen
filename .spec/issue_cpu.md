@@ -2,7 +2,7 @@
 
 ## Summary
 
-The animated menu bar icon appears to add steady CPU usage to the `robot-swift status-icon` helper.
+The animated menu bar icon appears to add steady CPU usage to the `hyper-zen status-icon` helper.
 
 The app is still lightweight in memory, but the continuous SF Symbol animation is probably not ideal for an always-running background menu bar process.
 
@@ -16,14 +16,14 @@ The menu bar icon uses Apple native SF Symbols:
 
 Relevant file:
 
-- `Sources/robot-swift/StatusIcon.swift`
+- `Sources/hyper-zen/StatusIcon.swift`
 
 ## Process Inspected
 
 Running process:
 
 ```text
-/Users/Panutat/app/robot-swift/.build/release/robot-swift status-icon
+/Users/Panutat/app/hyper-zen/.build/release/hyper-zen status-icon
 ```
 
 PID at inspection time:
@@ -82,7 +82,7 @@ The icon was changed from animated `gearshape.fill` to static `gearshape.fill`, 
 New running process:
 
 ```text
-/Users/Panutat/app/robot-swift/.build/release/robot-swift status-icon
+/Users/Panutat/app/hyper-zen/.build/release/hyper-zen status-icon
 ```
 
 PID at follow-up inspection time:

@@ -1,7 +1,7 @@
 import CoreGraphics
 import Foundation
 
-public struct RobotPoint: Codable, Equatable, Sendable {
+public struct HyperZenPoint: Codable, Equatable, Sendable {
     public var x: Int
     public var y: Int
 
@@ -15,7 +15,7 @@ public struct RobotPoint: Codable, Equatable, Sendable {
     }
 }
 
-public struct RobotSize: Codable, Equatable, Sendable {
+public struct HyperZenSize: Codable, Equatable, Sendable {
     public var width: Int
     public var height: Int
 
@@ -25,13 +25,13 @@ public struct RobotSize: Codable, Equatable, Sendable {
     }
 }
 
-public struct RobotRect: Codable, Equatable, Sendable {
-    public var origin: RobotPoint
-    public var size: RobotSize
+public struct HyperZenRect: Codable, Equatable, Sendable {
+    public var origin: HyperZenPoint
+    public var size: HyperZenSize
 
     public init(x: Int, y: Int, width: Int, height: Int) {
-        self.origin = RobotPoint(x: x, y: y)
-        self.size = RobotSize(width: width, height: height)
+        self.origin = HyperZenPoint(x: x, y: y)
+        self.size = HyperZenSize(width: width, height: height)
     }
 
     public init(_ rect: CGRect) {
@@ -53,7 +53,7 @@ public struct RobotRect: Codable, Equatable, Sendable {
     }
 }
 
-public struct RobotProcess: Codable, Equatable, Sendable {
+public struct HyperZenProcess: Codable, Equatable, Sendable {
     public var pid: Int32
     public var name: String
     public var path: String?
@@ -65,14 +65,14 @@ public struct RobotProcess: Codable, Equatable, Sendable {
     }
 }
 
-public struct RobotWindow: Codable, Equatable, Sendable {
+public struct HyperZenWindow: Codable, Equatable, Sendable {
     public var id: UInt32
     public var ownerPID: Int32
     public var ownerName: String
     public var title: String
-    public var bounds: RobotRect
+    public var bounds: HyperZenRect
 
-    public init(id: UInt32, ownerPID: Int32, ownerName: String, title: String, bounds: RobotRect) {
+    public init(id: UInt32, ownerPID: Int32, ownerName: String, title: String, bounds: HyperZenRect) {
         self.id = id
         self.ownerPID = ownerPID
         self.ownerName = ownerName
@@ -81,7 +81,7 @@ public struct RobotWindow: Codable, Equatable, Sendable {
     }
 }
 
-public enum RobotError: LocalizedError, Equatable {
+public enum HyperZenError: LocalizedError, Equatable {
     case invalidArgument(String)
     case permissionDenied(String)
     case unsupported(String)

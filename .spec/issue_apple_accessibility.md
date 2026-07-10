@@ -2,7 +2,7 @@
 
 ## Summary
 
-The `robot-swift` menu could show:
+The `hyper-zen` menu could show:
 
 ```text
 Accessibility: Required for Teams presence
@@ -21,13 +21,13 @@ The results came from different security contexts. A command launched from an au
 The installed LaunchAgent is:
 
 ```text
-~/Library/LaunchAgents/com.panutat.robot-swift.status-icon.plist
+~/Library/LaunchAgents/com.panutat.hyper-zen.status-icon.plist
 ```
 
 It launches:
 
 ```text
-/Users/Panutat/app/robot-swift/.build/release/robot-swift status-icon
+/Users/Panutat/app/hyper-zen/.build/release/hyper-zen status-icon
 ```
 
 The LaunchAgent process must have its own valid Accessibility authorization. Granting access only to Terminal, Codex, or another parent application is not sufficient for the independently launched background process.
@@ -45,10 +45,10 @@ Its designated requirement is based on its code hash. Running another release bu
 
 This commonly produces the following sequence:
 
-1. Build `robot-swift`.
+1. Build `hyper-zen`.
 2. Add it to Accessibility and enable it.
-3. Rebuild `robot-swift`.
-4. The new LaunchAgent process is denied even though an enabled `robot-swift` entry remains visible.
+3. Rebuild `hyper-zen`.
+4. The new LaunchAgent process is denied even though an enabled `hyper-zen` entry remains visible.
 
 Until the executable is signed with a stable code-signing certificate, Accessibility permission may need to be granted again after every rebuild.
 
@@ -63,21 +63,21 @@ open "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibil
 Reveal the current executable in Finder:
 
 ```sh
-open -R ~/app/robot-swift/.build/release/robot-swift
+open -R ~/app/hyper-zen/.build/release/hyper-zen
 ```
 
 Then:
 
-1. Remove the stale `robot-swift` entry from the Accessibility list if one exists.
+1. Remove the stale `hyper-zen` entry from the Accessibility list if one exists.
 2. Click `+`, or drag the revealed executable into the list.
 3. Add this exact file:
 
    ```text
-   /Users/Panutat/app/robot-swift/.build/release/robot-swift
+   /Users/Panutat/app/hyper-zen/.build/release/hyper-zen
    ```
 
 4. Enable its toggle.
-5. Restart the LaunchAgent with `task robot-swift`.
+5. Restart the LaunchAgent with `task hyper-zen`.
 
 macOS intentionally requires the grant to be confirmed in System Settings. There is no supported command that grants Accessibility permission.
 
@@ -86,13 +86,13 @@ macOS intentionally requires the grant to be confirmed in System Settings. There
 This command does not work:
 
 ```sh
-tccutil reset Accessibility robot-swift
+tccutil reset Accessibility hyper-zen
 ```
 
-It fails because `robot-swift` is a standalone executable, not a registered application bundle with a bundle identifier:
+It fails because `hyper-zen` is a standalone executable, not a registered application bundle with a bundle identifier:
 
 ```text
-tccutil: No such bundle identifier "robot-swift"
+tccutil: No such bundle identifier "hyper-zen"
 ```
 
 The following command resets Accessibility permission for every application and is therefore not recommended for routine recovery:
@@ -117,7 +117,7 @@ Accessibility: Required for Teams presence
 The LaunchAgent's live result is more relevant than a foreground invocation of:
 
 ```sh
-.build/release/robot-swift permissions
+.build/release/hyper-zen permissions
 ```
 
 ## Functional Verification

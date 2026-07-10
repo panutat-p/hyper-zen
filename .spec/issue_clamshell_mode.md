@@ -2,7 +2,7 @@
 
 ## Summary
 
-`robot-swift status-icon` worked as expected with the laptop lid open, but closing the lid while connected to power and HDMI could leave the Mac awake while showing the lock screen on the external display.
+`hyper-zen status-icon` worked as expected with the laptop lid open, but closing the lid while connected to power and HDMI could leave the Mac awake while showing the lock screen on the external display.
 
 Observed cases:
 
@@ -13,7 +13,7 @@ Observed cases:
 
 The recent Case 2 behavior looked like a display/session lock transition, not a full system sleep. The power log did not show a matching `Entering Sleep` and `Wake` pair around the observed event. It did show loginwindow activity and display/power assertion changes.
 
-The original `status-icon` implementation only posted a synthetic mouse-moved event every 5 minutes. It did not hold macOS power assertions, so macOS had no explicit instruction from `robot-swift` to keep idle system sleep or idle display sleep blocked.
+The original `status-icon` implementation only posted a synthetic mouse-moved event every 5 minutes. It did not hold macOS power assertions, so macOS had no explicit instruction from `hyper-zen` to keep idle system sleep or idle display sleep blocked.
 
 ## Fix
 
@@ -41,7 +41,7 @@ That setting is intentionally not changed by this project.
 
 ## Verification
 
-With `status-icon` running, `pmset -g assertions` should list `robot-swift` as owning:
+With `status-icon` running, `pmset -g assertions` should list `hyper-zen` as owning:
 
 - `PreventUserIdleSystemSleep`
 - `PreventUserIdleDisplaySleep`

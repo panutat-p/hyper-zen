@@ -2,7 +2,7 @@ import AppKit
 import CoreGraphics
 import Foundation
 
-public enum RobotScreen {
+public enum HyperZenScreen {
     public static func displayIDs() -> [CGDirectDisplayID] {
         var count: UInt32 = 0
         CGGetActiveDisplayList(0, nil, &count)
@@ -27,17 +27,17 @@ public enum RobotScreen {
         displayIDs().count
     }
 
-    public static func displayRect(_ index: Int = 0) throws -> RobotRect {
+    public static func displayRect(_ index: Int = 0) throws -> HyperZenRect {
         let displays = displayIDs()
         guard displays.indices.contains(index) else {
-            throw RobotError.notFound("Display index \(index) was not found")
+            throw HyperZenError.notFound("Display index \(index) was not found")
         }
-        return RobotRect(CGDisplayBounds(displays[index]))
+        return HyperZenRect(CGDisplayBounds(displays[index]))
     }
 
-    public static func screenSize() -> RobotSize {
+    public static func screenSize() -> HyperZenSize {
         let bounds = CGDisplayBounds(CGMainDisplayID())
-        return RobotSize(width: Int(bounds.width), height: Int(bounds.height))
+        return HyperZenSize(width: Int(bounds.width), height: Int(bounds.height))
     }
 
     public static func scale(displayIndex: Int = 0) -> Double {
