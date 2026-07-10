@@ -134,18 +134,12 @@ final class StatusIconAppDelegate: NSObject, NSApplicationDelegate {
         }
 
         let sizeConfiguration = NSImage.SymbolConfiguration(pointSize: 16, weight: .regular)
-        let symbolConfiguration: NSImage.SymbolConfiguration
-        if isAccessibilityTrusted {
-            let colorConfiguration = NSImage.SymbolConfiguration(
-                paletteColors: [.systemYellow, .systemOrange]
-            )
-            symbolConfiguration = sizeConfiguration.applying(colorConfiguration)
-        } else {
-            symbolConfiguration = sizeConfiguration
-        }
+        let color = isAccessibilityTrusted ? NSColor.systemGreen : NSColor.systemRed
+        let colorConfiguration = NSImage.SymbolConfiguration(paletteColors: [color])
+        let symbolConfiguration = sizeConfiguration.applying(colorConfiguration)
 
         let configuredImage = image.withSymbolConfiguration(symbolConfiguration) ?? image
-        configuredImage.isTemplate = !isAccessibilityTrusted
+        configuredImage.isTemplate = false
         button.image = configuredImage
     }
 
