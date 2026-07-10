@@ -1,10 +1,19 @@
-# hyper-zen
+# HyperZen
 
-Native macOS automation built with Apple frameworks directly in Swift.
+HyperZen is a native macOS automation toolkit written in Swift. It provides a reusable Swift library and a command-line tool for input, clipboard, display, window, and process automation.
 
-- CoreGraphics for mouse, keyboard, scrolling, and display geometry.
-- AppKit for clipboard, process, window, activation, and alerts.
-- Swift Package Manager for a library target (`HyperZen`) and a CLI (`hyper-zen`).
+It uses Apple frameworks directly:
+
+- CoreGraphics for mouse, keyboard, scrolling, and display geometry
+- AppKit for clipboard, processes, windows, activation, and alerts
+- Swift Package Manager for the `HyperZen` library and `hyper-zen` command
+
+## Requirements
+
+- macOS 13 (Ventura) or later
+- Swift 6.1 or later
+
+Input automation requires Accessibility permission. HyperZen does not request Screen Recording permission and does not provide screenshot or pixel-capture features.
 
 ## Build
 
@@ -12,24 +21,44 @@ Native macOS automation built with Apple frameworks directly in Swift.
 swift build
 ```
 
-## Try it
+Run the command-line tool without installing it:
 
 ```sh
+swift run hyper-zen help
+```
+
+## Command-line usage
+
+```sh
+# Check or request Accessibility permission
 swift run hyper-zen permissions --prompt
-swift run hyper-zen status-icon
+
+# Mouse and keyboard input
 swift run hyper-zen pos
 swift run hyper-zen move 300 300
 swift run hyper-zen click left
 swift run hyper-zen key a cmd
 swift run hyper-zen type "hello from Swift"
+
+# Clipboard, display, windows, and processes
 swift run hyper-zen copy "clipboard text"
 swift run hyper-zen paste
+swift run hyper-zen displays
 swift run hyper-zen windows
+swift run hyper-zen processes
 ```
 
-macOS will require Accessibility permission for input automation. This package does not request Screen/System Recording permission.
+Run `swift run hyper-zen help` for the complete command list.
 
-`status-icon` keeps the terminal process alive, shows a small menu bar icon, holds macOS idle system/display sleep assertions, and declares user activity every 60 seconds while it is running. It also briefly moves the pointer by one pixel and returns it so presence-aware apps such as Microsoft Teams receive an input event. Accessibility permission is required for that input nudge. Quit it from the menu bar item or press Control-C in the terminal.
+## Status icon
+
+`status-icon` shows a menu-bar icon, prevents idle system and display sleep, and generates a small input nudge every 60 seconds. Accessibility permission is required for the input nudge.
+
+```sh
+swift run hyper-zen status-icon
+```
+
+Quit it from the menu bar or press Control-C in the terminal.
 
 ## Start At Login
 
@@ -58,7 +87,3 @@ try HyperZen.writeClipboard("Hello")
 let size = HyperZen.screenSize()
 print(size.width, size.height)
 ```
-
-## Scope
-
-This is intentionally macOS-native and omits screenshot and pixel-capture features that would require Screen/System Recording permission.
