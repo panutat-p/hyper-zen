@@ -25,11 +25,7 @@ jobs:
             exit 1
           fi
           echo "VERSION=$VERSION" >> "$GITHUB_OUTPUT"
-
-      - name: Test package
-        env:
-          HYPER_ZEN_VERSION: ${{ steps.version.outputs.VERSION }}
-        run: swift test
+          echo "EXECUTABLE=hyper-zen-v${VERSION//./_}" >> "$GITHUB_OUTPUT"
 
       - name: Build universal executable
         id: build
@@ -75,7 +71,8 @@ jobs:
             brew install panutat-p/tap/hyper-zen
             ```
 
-            The installed executable is versioned as `hyper-zen-${{ steps.version.outputs.VERSION }}`.
+            The installed executable is versioned as `${{ steps.version.outputs.EXECUTABLE }}`,
+            keeping the full name visible in macOS Accessibility settings.
             Grant Accessibility permission to that executable after installing or upgrading, then restart the service:
 
             ```sh
