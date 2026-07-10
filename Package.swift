@@ -1,30 +1,33 @@
-// swift-tools-version: 5.9
+// swift-tools-version: 6.1
 
 import PackageDescription
 
 let package = Package(
-    name: "Hyperzen",
-    platforms: [.macOS(.v13)],
+    name: "robot-swift",
+    platforms: [
+        .macOS(.v13)
+    ],
+    products: [
+        .library(name: "RobotSwift", targets: ["RobotSwift"]),
+        .executable(name: "robot-swift", targets: ["robot-swift"])
+    ],
     targets: [
         .target(
-            name: "HyperzenCore",
-            path: "Hyperzen",
-            exclude: [
-                "main.swift",
-                "Info.plist",
-                "Assets.xcassets",
-            ],
+            name: "RobotSwift",
             linkerSettings: [
                 .linkedFramework("AppKit"),
-                .linkedFramework("IOKit"),
-                .linkedFramework("CoreGraphics"),
                 .linkedFramework("ApplicationServices"),
+                .linkedFramework("Carbon"),
+                .linkedFramework("CoreGraphics")
             ]
         ),
-        .testTarget(
-            name: "HyperzenTests",
-            dependencies: ["HyperzenCore"],
-            path: "Tests/HyperzenTests"
+        .executableTarget(
+            name: "robot-swift",
+            dependencies: ["RobotSwift"]
         ),
+        .testTarget(
+            name: "RobotSwiftTests",
+            dependencies: ["RobotSwift"]
+        )
     ]
 )
