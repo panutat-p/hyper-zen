@@ -1,0 +1,96 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Extract and validate version
+        id: version
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Tag must use vMAJOR.MINOR.PATCH: $GITHUB_REF_NAME" >&2
+            exit 1
+          fi
+          echo "VERSION=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Test package
+        run: swift test
+
+      - name: Build universal executable
+        id: build
+        env:
+          VERSION: ${{ steps.version.outputs.VERSION }}
+        run: |
+          swift build -c release --triple arm64-apple-macosx13.0
+          swift build -c release --triple x86_64-apple-macosx13.0
+
+          mkdir -p release-package
+          lipo -create \
+            .build/arm64-apple-macosx/release/hyper-zen \
+            .build/x86_64-apple-macosx/release/hyper-zen \
+            -output release-package/hyper-zen
+          codesign --force --sign - release-package/hyper-zen
+          codesign --verify --strict --verbose=2 release-package/hyper-zen
+
+          ARCHS="$(lipo -archs release-package/hyper-zen)"
+          if [[ "$ARCHS" != *"arm64"* || "$ARCHS" != *"x86_64"* ]]; then
+            echo "Expected arm64 and x86_64 slices, got: $ARCHS" >&2
+            exit 1
+          fi
+
+          BINARY_VERSION="$(release-package/hyper-zen version)"
+          if [[ "$BINARY_VERSION" != "$VERSION" ]]; then
+            echo "Binary version $BINARY_VERSION does not match tag version $VERSION" >&2
+            exit 1
+          fi
+
+          tar -C release-package -czf "hyper-zen-$VERSION.tar.gz" hyper-zen
+          SHA256="$(shasum -a 256 "hyper-zen-$VERSION.tar.gz" | awk '{print $1}')"
+          echo "SHA256=$SHA256" >> "$GITHUB_OUTPUT"
+
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: Hyper Zen ${{ github.ref_name }}
+          body: |
+            ## Install via Homebrew
+            ```sh
+            brew install panutat-p/tap/hyper-zen
+            ```
+
+            The installed executable is versioned as `hyper-zen-${{ steps.version.outputs.VERSION }}`.
+            Grant Accessibility permission to that executable after installing or upgrading, then restart the service:
+
+            ```sh
+            brew services restart hyper-zen
+            ```
+          files: hyper-zen-${{ steps.version.outputs.VERSION }}.tar.gz
+          draft: false
+          prerelease: false
+
+      - name: Update Homebrew formula
+        uses: peter-evans/repository-dispatch@v4
+        with:
+          token: ${{ secrets.TAP_GITHUB_TOKEN }}
+          repository: panutat-p/homebrew-tap
+          event-type: update-formula
+          client-payload: |
+            {
+              "formula": "hyper-zen",
+              "version": "${{ steps.version.outputs.VERSION }}",
+              "sha256": "${{ steps.build.outputs.SHA256 }}"
+            }
