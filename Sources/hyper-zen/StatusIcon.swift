@@ -24,16 +24,6 @@ final class StatusIconAppDelegate: NSObject, NSApplicationDelegate {
 
         let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
         if let button = item.button {
-            if let image = NSImage(systemSymbolName: "bolt.circle.fill", accessibilityDescription: "hyper-zen is running") {
-                let sizeConfiguration = NSImage.SymbolConfiguration(pointSize: 16, weight: .regular)
-                let colorConfiguration = NSImage.SymbolConfiguration(paletteColors: [.systemYellow, .systemOrange])
-                let symbolConfiguration = sizeConfiguration.applying(colorConfiguration)
-                let colorImage = image.withSymbolConfiguration(symbolConfiguration) ?? image
-                colorImage.isTemplate = false
-                button.image = colorImage
-            } else {
-                button.title = "R"
-            }
             button.toolTip = "hyper-zen is running in Terminal"
         }
 
@@ -42,7 +32,10 @@ final class StatusIconAppDelegate: NSObject, NSApplicationDelegate {
         addDisabledItem("PID \(ProcessInfo.processInfo.processIdentifier)", to: menu)
         addDisabledItem("Power Assertions: \(powerAssertions.statusText)", to: menu)
         addDisabledItem("Input nudge: Every \(Int(activityInterval)) seconds", to: menu)
-        let accessibilityItem = addDisabledItem(accessibilityStatusText, to: menu)
+        let accessibilityItem = addDisabledItem(
+            accessibilityStatusText(isAccessibilityTrusted: HyperZenPermissions.isAccessibilityTrusted),
+            to: menu
+        )
         accessibilityStatusItem = accessibilityItem
         menu.addItem(.separator())
 
@@ -57,6 +50,7 @@ final class StatusIconAppDelegate: NSObject, NSApplicationDelegate {
         item.menu = menu
         menu.delegate = self
         statusItem = item
+        refreshAccessibilityPresentation()
     }
 
     func applicationWillTerminate(_ notification: Notification) {
@@ -120,8 +114,37 @@ final class StatusIconAppDelegate: NSObject, NSApplicationDelegate {
         NSApplication.shared.terminate(nil)
     }
 
-    private var accessibilityStatusText: String {
-        "Accessibility: \(HyperZenPermissions.isAccessibilityTrusted ? "Allowed" : "Not Allowed")"
+    private func refreshAccessibilityPresentation() {
+        let isAccessibilityTrusted = HyperZenPermissions.isAccessibilityTrusted
+        updateStatusIcon(isAccessibilityTrusted: isAccessibilityTrusted)
+        accessibilityStatusItem?.title = accessibilityStatusText(isAccessibilityTrusted: isAccessibilityTrusted)
+    }
+
+    private func updateStatusIcon(isAccessibilityTrusted: Bool) {
+        guard let button = statusItem?.button else {
+            return
+        }
+
+        guard let image = NSImage(
+            systemSymbolName: "bolt.circle.fill",
+            accessibilityDescription: "hyper-zen is running"
+        ) else {
+            button.title = "R"
+            return
+        }
+
+        let sizeConfiguration = NSImage.SymbolConfiguration(pointSize: 16, weight: .regular)
+        let color = isAccessibilityTrusted ? NSColor.systemGreen : NSColor.systemRed
+        let colorConfiguration = NSImage.SymbolConfiguration(paletteColors: [color])
+        let symbolConfiguration = sizeConfiguration.applying(colorConfiguration)
+
+        let configuredImage = image.withSymbolConfiguration(symbolConfiguration) ?? image
+        configuredImage.isTemplate = false
+        button.image = configuredImage
+    }
+
+    private func accessibilityStatusText(isAccessibilityTrusted: Bool) -> String {
+        "Accessibility: \(isAccessibilityTrusted ? "Allowed" : "Not Allowed")"
     }
 
     @discardableResult
@@ -135,7 +158,7 @@ final class StatusIconAppDelegate: NSObject, NSApplicationDelegate {
 
 extension StatusIconAppDelegate: NSMenuDelegate {
     func menuWillOpen(_ menu: NSMenu) {
-        accessibilityStatusItem?.title = accessibilityStatusText
+        refreshAccessibilityPresentation()
     }
 }
 

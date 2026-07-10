@@ -80,7 +80,7 @@ Run `swift run hyper-zen help` for the complete command list.
 
 ## Status icon
 
-`status-icon` shows a menu-bar icon, prevents idle system and display sleep, and generates a small input nudge every 60 seconds. Accessibility permission is required for the input nudge.
+`status-icon` shows a menu-bar icon, prevents idle system and display sleep, and generates a small input nudge every 60 seconds. Its icon is green when Accessibility is allowed and red when it is not.
 
 ```sh
 swift run hyper-zen status-icon
