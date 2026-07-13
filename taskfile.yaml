@@ -1,0 +1,102 @@
+version: 3
+
+vars:
+  PROJECT: Hyperzen.xcodeproj
+  SCHEME: Hyperzen
+  DERIVED_DATA: "{{.ROOT_DIR}}/.build/DerivedData"
+  DEBUG_APP: "{{.DERIVED_DATA}}/Build/Products/Debug/Hyperzen.app"
+  RELEASE_APP: "{{.DERIVED_DATA}}/Build/Products/Release/Hyperzen.app"
+  BUNDLE_APP: "{{.ROOT_DIR}}/.build/Hyperzen.app"
+
+tasks:
+  icon:
+    desc: Generate a 1024px app icon preview PNG and open it
+    cmds:
+      - chmod +x Scripts/generate-icons.sh
+      - Scripts/generate-icons.sh preview
+      - open {{.ROOT_DIR}}/Design/AppIcon-preview.png
+
+  build:cli:
+    desc: Build Hyperzen.app with swiftc (no Xcode required)
+    cmds:
+      - chmod +x Scripts/bundle-app.sh
+      - Scripts/bundle-app.sh debug
+
+  test:
+    desc: Run Swift Testing unit tests
+    dir: "{{.ROOT_DIR}}"
+    cmds:
+      - swift test {{.CLI_ARGS}}
+
+  build:cli-release:
+    desc: Build release Hyperzen.app with swiftc (no Xcode required)
+    cmds:
+      - chmod +x Scripts/bundle-app.sh
+      - Scripts/bundle-app.sh release
+
+  build:
+    desc: Build Hyperzen (Debug)
+    cmds:
+      - |
+        if [[ "$(xcode-select -p 2>/dev/null)" == *"Xcode.app"* ]] && xcodebuild -version >/dev/null 2>&1; then
+          xcodebuild \
+            -project {{.PROJECT}} \
+            -scheme {{.SCHEME}} \
+            -configuration Debug \
+            -derivedDataPath {{.DERIVED_DATA}} \
+            build
+        else
+          task build:cli
+        fi
+
+  dev:
+    desc: Build Debug and launch Hyperzen
+    deps: [build]
+    cmds:
+      - |
+        if [[ -d "{{.DEBUG_APP}}" ]]; then
+          open "{{.DEBUG_APP}}"
+        else
+          open "{{.BUNDLE_APP}}"
+        fi
+
+  release:
+    desc: Build Hyperzen (Release) and export .dmg to project root
+    cmds:
+      - |
+        if [[ "$(xcode-select -p 2>/dev/null)" == *"Xcode.app"* ]] && xcodebuild -version >/dev/null 2>&1; then
+          xcodebuild \
+            -project {{.PROJECT}} \
+            -scheme {{.SCHEME}} \
+            -configuration Release \
+            -derivedDataPath {{.DERIVED_DATA}} \
+            build
+          rm -rf {{.BUNDLE_APP}}
+          cp -R {{.RELEASE_APP}} {{.BUNDLE_APP}}
+        else
+          task build:cli-release
+        fi
+      - chmod +x Scripts/create-dmg.sh
+      - Scripts/create-dmg.sh {{.ROOT_DIR}}
+
+  unquarantine:
+    desc: Remove macOS quarantine flag from the built app and DMG (fixes Gatekeeper warning)
+    cmds:
+      - xattr -rd com.apple.quarantine "{{.BUNDLE_APP}}" 2>/dev/null || true
+      - xattr -rd com.apple.quarantine "{{.ROOT_DIR}}/Hyperzen.dmg" 2>/dev/null || true
+
+  accessibility:
+    desc: Open System Settings to Privacy & Security → Accessibility
+    cmds:
+      - open "x-apple.systempreferences:com.apple.settings.PrivacySecurity.extension?Privacy_Accessibility"
+
+  accessibility:reset:
+    desc: Reset HyperZen Accessibility permission (release and dev bundle IDs)
+    cmds:
+      - tccutil reset Accessibility com.hyperzen.HyperZen
+      - tccutil reset Accessibility com.hyperzen.Hyperzen
+
+  menubar:
+    desc: Open System Settings → Menu Bar
+    cmds:
+      - open "x-apple.systempreferences:com.apple.MenuBarSettings"
