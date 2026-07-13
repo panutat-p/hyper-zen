@@ -1,0 +1,77 @@
+version: 3
+
+vars:
+  BUNDLE_APP: "{{.ROOT_DIR}}/.build/HyperZen.app"
+  DMG: "{{.ROOT_DIR}}/HyperZen.dmg"
+
+tasks:
+  icon:
+    desc: Generate a 1024px app icon preview PNG and open it
+    cmds:
+      - chmod +x Scripts/generate-icons.sh
+      - Scripts/generate-icons.sh preview
+      - open {{.ROOT_DIR}}/Design/AppIcon-preview.png
+
+  test:
+    desc: Run Swift Testing unit tests
+    dir: "{{.ROOT_DIR}}"
+    cmds:
+      - swift test {{.CLI_ARGS}}
+
+  build:
+    desc: Build the HyperZen.app Debug bundle
+    cmds:
+      - chmod +x Scripts/bundle-app.sh
+      - Scripts/bundle-app.sh debug
+
+  build:release:
+    desc: Build the HyperZen.app Release bundle
+    cmds:
+      - chmod +x Scripts/bundle-app.sh
+      - Scripts/bundle-app.sh release
+
+  dev:
+    desc: Build and launch the HyperZen Debug app
+    deps: [build]
+    cmds:
+      - open "{{.BUNDLE_APP}}"
+
+  verify:
+    desc: Run tests and build the full Debug app bundle
+    cmds:
+      - task test
+      - task build
+
+  release:
+    desc: Build HyperZen Release and create HyperZen.dmg
+    deps: [build:release]
+    cmds:
+      - chmod +x Scripts/create-dmg.sh
+      - Scripts/create-dmg.sh {{.ROOT_DIR}}
+
+  clean:
+    desc: Remove local build and DMG artifacts
+    cmds:
+      - rm -rf "{{.ROOT_DIR}}/.build" "{{.DMG}}"
+
+  unquarantine:
+    desc: Remove macOS quarantine flag from the built app and DMG (fixes Gatekeeper warning)
+    cmds:
+      - xattr -rd com.apple.quarantine "{{.BUNDLE_APP}}" 2>/dev/null || true
+      - xattr -rd com.apple.quarantine "{{.DMG}}" 2>/dev/null || true
+
+  accessibility:
+    desc: Open System Settings to Privacy & Security → Accessibility
+    cmds:
+      - open "x-apple.systempreferences:com.apple.settings.PrivacySecurity.extension?Privacy_Accessibility"
+
+  accessibility:reset:
+    desc: Reset HyperZen Accessibility permission (release and dev bundle IDs)
+    cmds:
+      - tccutil reset Accessibility com.hyperzen.HyperZen
+      - tccutil reset Accessibility com.hyperzen.Hyperzen
+
+  menubar:
+    desc: Open System Settings → Menu Bar
+    cmds:
+      - open "x-apple.systempreferences:com.apple.MenuBarSettings"
