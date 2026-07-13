@@ -99,7 +99,7 @@ done
 | Command | Output | Use for TCC testing? |
 |---------|--------|----------------------|
 | `brew install --cask hyperzen` | `/Applications/HyperZen.app` | Yes (matches users) |
-| `task dev` | `.build/HyperZen.app` or Xcode `Hyperzen.app` | No (conflicts with brew) |
+| `task dev` | `.build/HyperZen.app` | No (conflicts with brew) |
 | `task release` | `.build/HyperZen.app` + DMG | Only after install to Applications |
 
 ## Related issues

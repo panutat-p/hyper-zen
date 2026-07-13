@@ -67,21 +67,22 @@ The built app is at `.build/HyperZen.app`.
 
 | Command | Description |
 |---------|-------------|
-| `task build` | Build Debug (Xcode if available, otherwise `swiftc`) |
+| `task build` | Build the Debug app bundle at `.build/HyperZen.app` |
+| `task build:release` | Build the Release app bundle at `.build/HyperZen.app` |
 | `task dev` | Build Debug and open the app |
+| `task verify` | Run tests and build the full Debug app bundle |
 | `task release` | Build Release and create `HyperZen.dmg` in the project root |
-| `task build:cli` | Build Debug with `swiftc` (no Xcode) |
-| `task build:cli-release` | Build Release with `swiftc` (no Xcode) |
 | `task test` | Run unit tests via Swift Package Manager |
 | `task icon` | Generate a 1024px app icon preview and open it |
+| `task clean` | Remove local build and DMG artifacts |
 | `task unquarantine` | Remove Gatekeeper quarantine flags from the built app and DMG |
 
 ### Xcode
 
-Open `Hyperzen.xcodeproj` and build the **Hyperzen** scheme, or use:
+Open `HyperZen.xcodeproj` and build the **Hyperzen** scheme, or use:
 
 ```bash
-xcodebuild -project Hyperzen.xcodeproj -scheme Hyperzen -configuration Debug build
+xcodebuild -project HyperZen.xcodeproj -scheme Hyperzen -configuration Debug build
 ```
 
 ### Swift Package Manager
@@ -180,7 +181,7 @@ taskfile.yaml       Task definitions for build and release
 Package.swift       Swift package manifest (HyperzenCore + tests)
 ```
 
-**App icon** — `IconRenderer.swift` is the source of truth for the monkey mascot. Xcode builds use the committed PNGs in `Hyperzen/Assets.xcassets/AppIcon.appiconset/`. CLI builds (`task build:cli`) render icons at build time into `.build/AppIcon.icns` without modifying the asset catalog.
+**App icon** — `IconRenderer.swift` is the source of truth for the monkey mascot. Xcode builds use the committed PNGs in `Hyperzen/Assets.xcassets/AppIcon.appiconset/`. Local app builds (`task build`) render icons at build time into `.build/AppIcon.icns` without modifying the asset catalog.
 
 ## How it works
 

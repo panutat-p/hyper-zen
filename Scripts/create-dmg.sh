@@ -8,7 +8,7 @@ OUTPUT_DIR="${1:-$ROOT}"
 
 if [[ ! -d "$APP_DIR" ]]; then
   echo "App bundle not found: $APP_DIR" >&2
-  echo "Run 'task release' or 'task build:cli-release' first." >&2
+  echo "Run 'task build:release' first." >&2
   exit 1
 fi
 
