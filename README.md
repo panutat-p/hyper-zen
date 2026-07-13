@@ -1,10 +1,10 @@
 # HyperZen
 
-A native macOS application that keeps your Mac awake and can maintain collaboration presence. HyperZen uses one compact dropdown, available from its Dock icon or menu bar icon.
+A native macOS application that keeps your Mac awake and can maintain collaboration presence. HyperZen uses one compact dropdown, available from its launcher icon or menu bar icon without staying in the Dock.
 
 ## Features
 
-- **Windowless native app** — the Dock and menu-bar icons open the same compact dropdown; there is no permanent application window.
+- **Windowless native app** — the launcher and menu-bar icons open the same compact dropdown; HyperZen does not stay in the Dock.
 - **Keep awake by default** — enabled on launch; toggle it from the dropdown.
 - **System + display assertions** — uses `IOPMAssertion` to block both idle system sleep and display sleep (similar to Amphetamine's default behavior).
 - **Teams activity** — declares user activity and performs a one-pixel move-and-return every 60 seconds so collaboration presence can detect real input.
@@ -95,11 +95,11 @@ swift test
 
 ## Usage
 
-1. Launch HyperZen from Applications, Spotlight, Launchpad, or the Dock; its dropdown opens near the pointer.
+1. Launch HyperZen from Applications, Spotlight, or Launchpad; its dropdown opens near the pointer without adding a Dock icon.
 2. Use **Keep Mac Awake** and **Keep Teams Active** independently from the dropdown.
-3. Reopen the dropdown at any time by clicking the Dock icon or the menu-bar icon.
+3. Reopen the dropdown at any time from Launchpad, Spotlight, Applications, or the menu-bar icon.
 4. Grant Accessibility access only if you want Teams activity; Keep Mac Awake continues to work without it.
-5. If the menu-bar icon is obscured by a crowded or notched display, use the Dock icon; choose **Quit HyperZen** from the dropdown when finished.
+5. If the menu-bar icon is obscured by a crowded or notched display, reopen HyperZen from Launchpad, Spotlight, or Applications; choose **Quit HyperZen** from the dropdown when finished.
 
 ## Release pipeline
 

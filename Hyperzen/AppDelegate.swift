@@ -51,9 +51,9 @@ enum MenuBarIndicatorState: CaseIterable, Equatable {
 struct MenuPopupPlacement {
     /// Returns the screen point for a menu whose first item is positioned at the point.
     ///
-    /// A Dock click occurs below the screen's visible frame. Raising the point by the
-    /// menu height keeps the menu above the Dock instead of relying on AppKit to
-    /// recover from an off-screen presentation.
+    /// A launcher click can occur near a screen edge. Raising the point by the menu
+    /// height keeps the menu within the visible frame instead of relying on AppKit
+    /// to recover from an off-screen presentation.
     static func point(
         cursor: NSPoint,
         menuSize: NSSize,

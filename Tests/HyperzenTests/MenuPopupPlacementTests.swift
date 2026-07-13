@@ -7,8 +7,8 @@ struct MenuPopupPlacementTests {
     private let visibleFrame = NSRect(x: 0, y: 32, width: 1_000, height: 700)
     private let menuSize = NSSize(width: 240, height: 280)
 
-    @Test("A Dock click opens the menu above the visible frame")
-    func dockClickRaisesMenu() {
+    @Test("An edge click opens the menu inside the visible frame")
+    func edgeClickRaisesMenu() {
         let point = MenuPopupPlacement.point(
             cursor: NSPoint(x: 500, y: 12),
             menuSize: menuSize,

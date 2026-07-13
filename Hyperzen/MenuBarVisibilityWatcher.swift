@@ -27,7 +27,8 @@ enum MenuBarVisibilityWatcher {
     static let alertMessage = """
     HyperZen is running, but macOS may be hiding its menu bar icon.
 
-    You can still use HyperZen: click its Dock icon to open the controls.
+    You can still use HyperZen: open it from Launchpad, Spotlight, or Applications
+    to show the controls.
 
     Open System Settings → Menu Bar, find HyperZen under Allow in the Menu Bar, \
     and turn it on. The icon should appear immediately.
