@@ -1,5 +1,53 @@
 import AppKit
 
+enum MenuBarIndicatorState: CaseIterable, Equatable {
+    case active
+    case disabled
+    case blocked
+
+    init(teamsActivityRequested: Bool, hasAccessibility: Bool) {
+        if !teamsActivityRequested {
+            self = .disabled
+        } else if hasAccessibility {
+            self = .active
+        } else {
+            self = .blocked
+        }
+    }
+
+    var symbolName: String {
+        switch self {
+        case .active: "play.fill"
+        case .disabled: "pause.fill"
+        case .blocked: "stop.fill"
+        }
+    }
+
+    var label: String {
+        switch self {
+        case .active: "Active"
+        case .disabled: "Disabled"
+        case .blocked: "Blocked"
+        }
+    }
+
+    var tintColor: NSColor {
+        switch self {
+        case .active: .systemGreen
+        case .disabled: .systemGray
+        case .blocked: .systemRed
+        }
+    }
+
+    func makeImage() -> NSImage? {
+        let configuration = NSImage.SymbolConfiguration(pointSize: 14, weight: .medium)
+        return NSImage(
+            systemSymbolName: symbolName,
+            accessibilityDescription: "HyperZen \(label)"
+        )?.withSymbolConfiguration(configuration)
+    }
+}
+
 final class AppDelegate: NSObject, NSApplicationDelegate {
     private let sleepPreventer = SleepPreventer()
     private let activityNudger = ActivityNudger()
@@ -21,17 +69,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     private var hasAccessibility = false
     private var teamsActivityRequested = true
-    private var animationSource: DispatchSourceTimer?
-    private var currentFrame = 0
     private var screensAsleep = false
     private let appLaunchedAt = Date()
-
-    // ~2.5 FPS — slow gait, still light on CPU.
-    private let animationInterval: TimeInterval = 0.4
-
-    private lazy var runFrames: [NSImage] = (0..<IconRenderer.statusFrameCount)
-        .map { IconRenderer.makeStatusFrame(frame: $0) }
-    private lazy var idleFrame: NSImage = IconRenderer.makeStatusIdleIcon()
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.applicationIconImage = IconRenderer.makeAppIcon(size: 512)
@@ -68,7 +107,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationWillTerminate(_ notification: Notification) {
-        stopAnimation()
         activityNudger.stop()
         NSWorkspace.shared.notificationCenter.removeObserver(self)
         sleepPreventer.disable()
@@ -98,7 +136,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     @objc private func screensDidSleep() {
         screensAsleep = true
-        stopAnimation()
         reconcileTeamsActivity()
         updateUI()
     }
@@ -113,7 +150,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
         item.autosaveName = "HyperZen"
         item.isVisible = true
-        item.button?.image = idleFrame
+        let indicator = MenuBarIndicatorState(
+            teamsActivityRequested: teamsActivityRequested,
+            hasAccessibility: hasAccessibility
+        )
+        item.button?.image = indicator.makeImage()
+        item.button?.contentTintColor = indicator.tintColor
         item.button?.toolTip = "HyperZen"
 
         let menu = NSMenu()
@@ -416,30 +458,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         NSApplication.shared.terminate(nil)
     }
 
-    private func startAnimation() {
-        guard animationSource == nil, !screensAsleep else { return }
-
-        let source = DispatchSource.makeTimerSource(flags: [], queue: .main)
-        let leeway = DispatchTimeInterval.milliseconds(Int(animationInterval * 1000 * 0.5))
-        source.schedule(deadline: .now() + animationInterval, repeating: animationInterval, leeway: leeway)
-        source.setEventHandler { [weak self] in
-            self?.advanceFrame()
-        }
-        source.resume()
-        animationSource = source
-    }
-
-    private func stopAnimation() {
-        animationSource?.cancel()
-        animationSource = nil
-        currentFrame = 0
-    }
-
-    private func advanceFrame() {
-        currentFrame = (currentFrame + 1) % runFrames.count
-        statusItem?.button?.image = runFrames[currentFrame]
-    }
-
     private var teamsStatusText: String {
         if !teamsActivityRequested {
             return "Disabled"
@@ -476,18 +494,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         accessibilityStatusLabel?.stringValue = accessibilityText
         accessibilityStatusLabel?.textColor = hasAccessibility ? .systemGreen : .systemRed
 
-        if keepAwakeEnabled && !screensAsleep {
-            startAnimation()
-            statusItem?.button?.image = runFrames[currentFrame]
-        } else {
-            stopAnimation()
-            statusItem?.button?.image = keepAwakeEnabled ? runFrames[0] : idleFrame
-        }
-
-        statusItem?.button?.contentTintColor = teamsActivityRequested
-            ? (hasAccessibility ? .systemGreen : .systemRed)
-            : .secondaryLabelColor
-        statusItem?.button?.toolTip = "HyperZen — Power: \(powerText), Teams: \(teamsText)"
+        let indicator = MenuBarIndicatorState(
+            teamsActivityRequested: teamsActivityRequested,
+            hasAccessibility: hasAccessibility
+        )
+        statusItem?.button?.image = indicator.makeImage()
+        statusItem?.button?.contentTintColor = indicator.tintColor
+        statusItem?.button?.toolTip = "HyperZen — \(indicator.label) — Power: \(powerText), Teams: \(teamsText)"
     }
 
     private var teamsStatusColor: NSColor {

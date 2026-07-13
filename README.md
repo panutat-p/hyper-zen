@@ -10,8 +10,8 @@ A native macOS application that keeps your Mac awake and can maintain collaborat
 - **Teams activity** — declares user activity and performs a one-pixel move-and-return every 60 seconds so collaboration presence can detect real input.
 - **Independent permissions** — sleep prevention works without Accessibility; only Teams activity requires it.
 - **Live status** — shows power assertions, Teams activity, and Accessibility state in both the application and menu bar.
-- **Animated status icon** — a running monkey when keep-awake is active, colored green or red for Accessibility status.
-- **Screen-aware** — pauses animation and nudges while the display is asleep; resumes when screens wake.
+- **Static three-state status icon** — Apple playback symbols show Teams activity as green Active, gray Disabled, or red Blocked without continuous animation.
+- **Screen-aware** — pauses Teams activity nudges while the display is asleep and resumes when screens wake.
 
 ## Install
 
@@ -188,7 +188,7 @@ Package.swift       Swift package manifest (HyperzenCore + tests)
 
 **Teams activity** — `ActivityNudger` declares IOKit user activity every 60 seconds, moves the cursor one pixel, then restores it after 50 milliseconds only if the user has not moved it meanwhile.
 
-**Menu bar icon** — `IconRenderer` draws the monkey mascot programmatically; `AppDelegate` cycles through animation frames at ~2.5 FPS while keep-awake is active and the screen is on.
+**Menu bar icon** — `AppDelegate` uses the built-in `play.fill`, `pause.fill`, and `stop.fill` SF Symbols for Active, Disabled, and Blocked Teams states. The static symbols avoid a repeating animation timer and its ongoing CPU wakeups.
 
 ## License
 
