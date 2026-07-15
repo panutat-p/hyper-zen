@@ -17,9 +17,9 @@ enum MenuBarIndicatorState: CaseIterable, Equatable {
 
     var symbolName: String {
         switch self {
-        case .active: "play.fill"
-        case .disabled: "pause.fill"
-        case .blocked: "stop.fill"
+        case .active: "eye.fill"
+        case .disabled: "eye.slash.fill"
+        case .blocked: "xmark"
         }
     }
 
@@ -34,17 +34,24 @@ enum MenuBarIndicatorState: CaseIterable, Equatable {
     var tintColor: NSColor {
         switch self {
         case .active: .systemGreen
-        case .disabled: .systemGray
+        case .disabled: .white
         case .blocked: .systemRed
         }
     }
 
     func makeImage() -> NSImage? {
-        let configuration = NSImage.SymbolConfiguration(pointSize: 14, weight: .medium)
-        return NSImage(
+        let sizeConfiguration = NSImage.SymbolConfiguration(pointSize: 14, weight: .medium)
+        let colorConfiguration = NSImage.SymbolConfiguration(paletteColors: [tintColor])
+        let configuration = sizeConfiguration.applying(colorConfiguration)
+        guard let image = NSImage(
             systemSymbolName: symbolName,
             accessibilityDescription: "HyperZen \(label)"
-        )?.withSymbolConfiguration(configuration)
+        )?.withSymbolConfiguration(configuration) else {
+            return nil
+        }
+        // Menu bar treats template SF Symbols as monochrome; bake color in instead.
+        image.isTemplate = false
+        return image
     }
 }
 
@@ -169,7 +176,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             hasAccessibility: hasAccessibility
         )
         item.button?.image = indicator.makeImage()
-        item.button?.contentTintColor = indicator.tintColor
         item.button?.toolTip = "HyperZen"
 
         let menu = NSMenu()
@@ -334,7 +340,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             hasAccessibility: hasAccessibility
         )
         statusItem?.button?.image = indicator.makeImage()
-        statusItem?.button?.contentTintColor = indicator.tintColor
         statusItem?.button?.toolTip = "HyperZen — \(indicator.label)"
     }
 
