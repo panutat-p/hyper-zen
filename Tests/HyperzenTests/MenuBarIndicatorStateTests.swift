@@ -35,6 +35,7 @@ struct MenuBarIndicatorStateTests {
             let image = try #require(state.makeImage())
             #expect(image.size.width > 0)
             #expect(image.size.height > 0)
+            #expect(image.isTemplate == false)
         }
     }
 }
