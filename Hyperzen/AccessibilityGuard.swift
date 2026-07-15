@@ -2,8 +2,8 @@ import AppKit
 import ApplicationServices
 
 /// Verifies that HyperZen has been granted macOS Accessibility (TCC) access.
-/// Keep-awake power assertions work without this permission; only Teams
-/// activity needs it because that feature posts synthetic HID events.
+/// The single On/Off control drives both power assertions and synthetic input.
+/// Power assertions work without Accessibility; the input nudge needs it.
 enum AccessibilityGuard {
     static let alertTitle = "Accessibility Permission Required"
     static let openSettingsButtonTitle = "Open System Settings"
@@ -12,11 +12,11 @@ enum AccessibilityGuard {
         "x-apple.systempreferences:com.apple.settings.PrivacySecurity.extension?Privacy_Accessibility"
 
     static let alertMessage = """
-    HyperZen can keep your Mac awake without Accessibility access. Accessibility \
-    is only required for Keep Teams Active.
+    HyperZen is On. Power assertions can keep your Mac awake without Accessibility, \
+    but the input nudge (for Teams presence) needs it.
 
     Open System Settings ▸ Privacy & Security ▸ Accessibility, enable \
-    HyperZen, then return to the app. Teams activity will start automatically.
+    HyperZen, then return to the app. The nudge starts automatically.
 
     If HyperZen is already listed, remove it with − and add \
     /Applications/HyperZen.app again. App updates can invalidate an existing \
@@ -34,11 +34,11 @@ enum AccessibilityGuard {
         _ = AXIsProcessTrustedWithOptions(options)
     }
 
-    /// Re-checks permission for Teams activity. When still denied, presents
+    /// Re-checks permission for the On-state input nudge. When still denied, presents
     /// `showAccessRequiredWarning()` before returning `false` unless
     /// `presentWarning` is `false` (used by unit tests).
     @discardableResult
-    static func requireAccessForTeamsActivity(presentWarning: Bool = true) -> Bool {
+    static func requireAccessForActivity(presentWarning: Bool = true) -> Bool {
         if isTrusted { return true }
 
         requestSystemPrompt()

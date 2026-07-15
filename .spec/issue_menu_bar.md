@@ -12,52 +12,23 @@ macOS places third-party `NSStatusItem` icons right-to-left, after the focused a
 - On notched MacBooks, the safe zone to the right of the notch is limited. Crowded menu bars push icons into the notch area.
 - The app already sets `item.autosaveName = "HyperZen"` which persists position across relaunches, but does not bias the initial position.
 
-## Options
+## Resolution
 
-### Option 1: Seed preferred position to far right (recommended)
+HyperZen remains discoverable from Launchpad, Spotlight, and Applications, but uses the accessory activation policy so it does not stay in the Dock. Its controls live in one shared dropdown:
 
-AppKit reads a hidden `UserDefaults` key before placing a status item:
+- Click the **menu-bar icon** for the normal status-item dropdown.
+- Reopen HyperZen from **Launchpad**, **Spotlight**, or **Applications** to open the same dropdown near the pointer.
+- HyperZen clamps the menu to the active screen's visible frame.
 
-```
-NSStatusItem Preferred Position <autosaveName>
-```
+This is the supported recovery path when the status item is hidden behind the notch or crowded out of reach. It does not depend on trying to control AppKit's system-owned menu-bar layout.
 
-Key: `NSStatusItem Preferred Position HyperZen`
-
-Writing a **small** value (e.g. `0` or near-`0`) biases the item to the far right (closest to Control Center / system clock), which is the safest zone on notched displays.
-
-**Implementation:** Before creating the `NSStatusItem`, write the preferred position key only if the user has not already manually set it (i.e., respect existing Cmd+drag placement).
-
-```swift
-private func setupStatusItem() {
-    let posKey = "NSStatusItem Preferred Position HyperZen"
-    if UserDefaults.standard.object(forKey: posKey) == nil {
-        UserDefaults.standard.set(0.0, forKey: posKey)
-    }
-    let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
-    item.autosaveName = "HyperZen"
-    // ...
-}
-```
-
-**Caveats:**
-- Undocumented/private key — could break in a future macOS version.
-- Once the user manually Cmd+drags the icon, AppKit overwrites the key; the seed is ignored on subsequent launches.
-
-### Option 2: Manual Cmd+drag (zero code, user-facing)
-
-The user can hold **⌘ Cmd** and drag the icon along the menu bar to reposition it. Since `autosaveName` is set, the position is remembered across relaunches.
-
-Action: Document this in the README / onboarding UI.
-
-### Option 3: Third-party menu bar managers
-
-Tools like **Ice** (free) or **Bartender** manage overflow icons. Not fixable in-app, but worth mentioning in support docs.
+The user can still hold **⌘ Cmd** and drag a visible menu-bar icon; its `autosaveName` preserves that placement across relaunches.
 
 ## What Won't Work
 
 - Setting an absolute frame/position on the status item button — the menu bar window is system-owned.
 - Guaranteeing icon placement to the right of the notch in all crowded scenarios.
+- Writing the undocumented `NSStatusItem Preferred Position` defaults key.
 
 ## Affected Hardware
 
@@ -65,5 +36,5 @@ Tools like **Ice** (free) or **Bartender** manage overflow icons. Not fixable in
 
 ## References
 
-- `Hyperzen/AppDelegate.swift` — `setupStatusItem()` at line 89
-- `Hyperzen/MenuBarVisibilityWatcher.swift` — detects when the icon is blocked and attempts recovery
+- `Hyperzen/AppDelegate.swift` — creates the shared status menu and presents it from launcher reopen events
+- `Hyperzen/MenuBarVisibilityWatcher.swift` — detects when macOS blocks the icon and presents recovery guidance

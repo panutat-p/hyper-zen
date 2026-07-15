@@ -15,7 +15,7 @@ a future design change is explicitly requested.
 
 ## Current Design Requirements
 
-- Recognizable as HyperZen at launcher, Dock, Spotlight, and Settings sizes.
+- Recognizable as HyperZen at launcher, Spotlight, and Settings sizes.
 - Friendly, minimal, and round rather than detailed or realistic.
 - Legible at small sizes with bold shapes and crisp edges.
 - Consistent with the existing menu-bar monkey without including its body,
@@ -152,7 +152,7 @@ Composer migration. They do not apply to the current approved static icon.
 - Default, dark, clear, tinted, and monochrome previews remain recognizable.
 - Eyes, ears, muzzle, and nose remain legible at 16-point preview size.
 - Modern `.icon` and compatibility PNG/ICNS outputs depict the same character.
-- The icon is inspected in the Dock and launcher before release.
+- The icon is inspected in the launcher before release.
 
 ## Apple References
 

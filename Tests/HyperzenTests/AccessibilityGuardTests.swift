@@ -23,12 +23,12 @@ struct AccessibilityGuardTests {
         ])
     }
 
-    @Test("Permission copy separates Teams activity from keep-awake")
-    func permissionCopySeparatesFeatures() {
+    @Test("Permission copy explains On needs Accessibility for the input nudge")
+    func permissionCopyExplainsOnNudge() {
         #expect(AccessibilityGuard.alertMessage.contains("HyperZen"))
         #expect(AccessibilityGuard.alertMessage.contains("Accessibility"))
-        #expect(AccessibilityGuard.alertMessage.contains("keep your Mac awake without"))
-        #expect(AccessibilityGuard.alertMessage.contains("Keep Teams Active"))
+        #expect(AccessibilityGuard.alertMessage.contains("Power assertions"))
+        #expect(AccessibilityGuard.alertMessage.contains("input nudge"))
         #expect(AccessibilityGuard.alertMessage.contains("/Applications/HyperZen.app"))
     }
 
@@ -40,10 +40,10 @@ struct AccessibilityGuardTests {
         #expect(URL(string: AccessibilityGuard.accessibilitySettingsURLString) != nil)
     }
 
-    @Test("Teams activity requirement matches the current trust state")
-    func teamsActivityRequirementMatchesTrustState() {
+    @Test("Activity requirement matches the current trust state")
+    func activityRequirementMatchesTrustState() {
         let expected = AXIsProcessTrusted()
-        let actual = AccessibilityGuard.requireAccessForTeamsActivity(presentWarning: false)
+        let actual = AccessibilityGuard.requireAccessForActivity(presentWarning: false)
 
         #expect(actual == expected)
     }
@@ -52,8 +52,8 @@ struct AccessibilityGuardTests {
     func repeatedPermissionChecksRemainStable() {
         let expected = AccessibilityGuard.isTrusted
 
-        #expect(AccessibilityGuard.requireAccessForTeamsActivity(presentWarning: false) == expected)
-        #expect(AccessibilityGuard.requireAccessForTeamsActivity(presentWarning: false) == expected)
+        #expect(AccessibilityGuard.requireAccessForActivity(presentWarning: false) == expected)
+        #expect(AccessibilityGuard.requireAccessForActivity(presentWarning: false) == expected)
         #expect(AccessibilityGuard.isTrusted == expected)
     }
 }

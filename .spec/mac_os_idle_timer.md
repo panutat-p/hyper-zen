@@ -168,41 +168,30 @@ process is Accessibility-trusted.
 | HyperZen feature | API | Needs Accessibility? |
 |------------------|-----|----------------------|
 | Keep-awake (prevent sleep) | `IOPMAssertion…` (`SleepPreventer`) | **No** |
-| Menu bar status item / animation | `NSStatusItem` | No |
+| Menu bar status item | `NSStatusItem` | No |
 | Permission warning modal | `NSAlert` | No |
-| **Keep Teams "Available"** (idle reset) | `CGEvent.post` (`ActivityNudger`) | **Yes (confirmed)** |
+| **Input nudge** (Teams presence) | `CGEvent.post` (`ActivityNudger`) | **Yes (confirmed)** |
 
-Important: **only the Teams-presence nudge needs Accessibility.** Basic
-keep-awake does not. Today `AppDelegate` gates *all* keep-awake behind
-`AXIsProcessTrusted()`, forcing every user to grant Accessibility even if they
-only want to prevent sleep.
+Important: **only the input nudge needs Accessibility.** Power assertions do not.
+
+The dropdown exposes a **single On/Off toggle** that starts or stops both features together. When On without Accessibility, assertions still run and the icon shows Blocked until Accessibility is granted for the nudge.
 
 ## Recommendations
 
-### A. Decouple the two features (no cost, removes most pain)
+### A. Product control: one On/Off (shipped)
 
-Split into:
+One toggle controls power assertions and synthetic input together. Simple UX; Accessibility remains required only for the nudge half of On.
 
-1. **Keep Awake (basic)** — `IOPMAssertion` only, no Accessibility, always
-   works. Make this the default.
-2. **Stay active in Teams** — optional toggle that starts `ActivityNudger`;
-   only this path prompts for / requires Accessibility.
-
-Effect: Accessibility becomes opt-in for the single feature that truly needs it.
-Users who only want sleep prevention never touch TCC, sidestepping Problem 2
-entirely for them.
-
-### B. Fix Problem 2 properly — Developer ID signing + notarization
+### B. Fix durable Accessibility — Developer ID signing + notarization
 
 The only reliable way to make the Accessibility grant survive upgrades. Anchors
 TCC to the signing identity instead of a per-build CDHash. Requires Apple
 Developer Program ($99/yr) and CI secrets. Full plan in `.spec/issue_apple.md`.
 No free distribution-grade alternative exists.
 
-### C. Both (recommended)
+### C. B remains recommended for distribution
 
-A removes friction now; B makes the remaining Accessibility-dependent feature
-durable across releases.
+A is the shipped control model; B makes the Accessibility-dependent nudge durable across releases.
 
 ## Dead ends (do not revisit without new OS behavior)
 
@@ -217,7 +206,7 @@ durable across releases.
 - `Hyperzen/ActivityNudger.swift` — the `CGEvent` nudge (Accessibility-gated mechanism)
 - `Hyperzen/SleepPreventer.swift` — `IOPMAssertion` keep-awake (no Accessibility)
 - `Hyperzen/AccessibilityGuard.swift` — `AXIsProcessTrusted()` gate + prompt
-- `Hyperzen/AppDelegate.swift` — currently gates all keep-awake on Accessibility
+- `Hyperzen/AppDelegate.swift` — single On/Off toggle for assertions + nudge
 - `Tools/IdleProbe/` — the CLI used to confirm these results
 - `.spec/issue_accessibility.md`, `.spec/issue_apple.md`, `.spec/issue_conflict.md`
 - `.cursor/skills/tcc/SKILL.md`

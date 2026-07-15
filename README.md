@@ -1,17 +1,17 @@
 # HyperZen
 
-A native macOS application that keeps your Mac awake and can maintain collaboration presence. HyperZen provides a full application window, Dock icon, and menu bar companion for quick access.
+A native macOS application that keeps your Mac awake and can maintain collaboration presence. HyperZen uses one compact dropdown, available from its launcher icon or menu bar icon without staying in the Dock.
 
 ## Features
 
-- **Full native app** — launches with an application window and Dock icon, with a menu bar companion for quick control.
-- **Keep awake by default** — enabled on launch; toggle it independently from the app window or menu bar.
-- **System + display assertions** — uses `IOPMAssertion` to block both idle system sleep and display sleep (similar to Amphetamine's default behavior).
-- **Teams activity** — declares user activity and performs a one-pixel move-and-return every 60 seconds so collaboration presence can detect real input.
-- **Independent permissions** — sleep prevention works without Accessibility; only Teams activity requires it.
-- **Live status** — shows power assertions, Teams activity, and Accessibility state in both the application and menu bar.
-- **Static three-state status icon** — Apple playback symbols show Teams activity as green Active, gray Disabled, or red Blocked without continuous animation.
-- **Screen-aware** — pauses Teams activity nudges while the display is asleep and resumes when screens wake.
+- **Windowless native app** — the launcher and menu-bar icons open the same compact dropdown; HyperZen does not stay in the Dock.
+- **Simple On/Off** — one toggle drives both power assertions and the input nudge together.
+- **System + display assertions** — when On, uses `IOPMAssertion` to block idle system sleep and display sleep.
+- **Input nudge** — when On (and Accessibility is allowed), declares user activity and performs a one-pixel move-and-return every 60 seconds so collaboration presence can detect real input.
+- **Accessibility only for the nudge** — power assertions work without Accessibility; the input nudge requires it. When On without Accessibility, the icon shows Blocked (red).
+- **Live status** — shows overall On/Off status and Accessibility state in the dropdown.
+- **Static three-state status icon** — Apple playback symbols show green On, gray Off, or red Blocked without continuous animation.
+- **Screen-aware** — pauses the input nudge while the display is asleep and resumes when screens wake.
 
 ## Install
 
@@ -79,10 +79,10 @@ The built app is at `.build/HyperZen.app`.
 
 ### Xcode
 
-Open `HyperZen.xcodeproj` and build the **Hyperzen** scheme, or use:
+Open `Hyperzen.xcodeproj` and build the **Hyperzen** scheme, or use:
 
 ```bash
-xcodebuild -project HyperZen.xcodeproj -scheme Hyperzen -configuration Debug build
+xcodebuild -project Hyperzen.xcodeproj -scheme Hyperzen -configuration Debug build
 ```
 
 ### Swift Package Manager
@@ -95,10 +95,11 @@ swift test
 
 ## Usage
 
-1. Launch HyperZen from Applications, Spotlight, or Launchpad.
-2. Use the application window to control **Keep Mac Awake** and **Keep Teams Active** independently.
-3. Grant Accessibility access only if you want Teams activity; Keep Mac Awake continues to work without it.
-4. Close the window to keep using the menu bar controls, or choose **Quit HyperZen** to exit.
+1. Launch HyperZen from Applications, Spotlight, or Launchpad; its dropdown opens near the pointer without adding a Dock icon.
+2. Use the single **On** / **Off** toggle. On enables power assertions and the input nudge together; Off stops both.
+3. Reopen the dropdown at any time from Launchpad, Spotlight, Applications, or the menu-bar icon.
+4. Grant Accessibility so the input nudge can run; power assertions still work when On without it (icon shows Blocked / red until Accessibility is allowed).
+5. If the menu-bar icon is obscured by a crowded or notched display, reopen HyperZen from Launchpad, Spotlight, or Applications; choose **Quit HyperZen** from the dropdown when finished.
 
 ## Release pipeline
 

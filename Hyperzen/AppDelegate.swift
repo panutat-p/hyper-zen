@@ -5,8 +5,8 @@ enum MenuBarIndicatorState: CaseIterable, Equatable {
     case disabled
     case blocked
 
-    init(teamsActivityRequested: Bool, hasAccessibility: Bool) {
-        if !teamsActivityRequested {
+    init(isOn: Bool, hasAccessibility: Bool) {
+        if !isOn {
             self = .disabled
         } else if hasAccessibility {
             self = .active
@@ -25,8 +25,8 @@ enum MenuBarIndicatorState: CaseIterable, Equatable {
 
     var label: String {
         switch self {
-        case .active: "Active"
-        case .disabled: "Disabled"
+        case .active: "On"
+        case .disabled: "Off"
         case .blocked: "Blocked"
         }
     }
@@ -48,49 +48,63 @@ enum MenuBarIndicatorState: CaseIterable, Equatable {
     }
 }
 
+struct MenuPopupPlacement {
+    /// Returns the screen point for a menu whose first item is positioned at the point.
+    ///
+    /// A launcher click can occur near a screen edge. Raising the point by the menu
+    /// height keeps the menu within the visible frame instead of relying on AppKit
+    /// to recover from an off-screen presentation.
+    static func point(
+        cursor: NSPoint,
+        menuSize: NSSize,
+        visibleFrame: NSRect
+    ) -> NSPoint {
+        let maximumX = max(visibleFrame.minX, visibleFrame.maxX - menuSize.width)
+        let x = min(max(cursor.x, visibleFrame.minX), maximumX)
+        let y = min(
+            max(cursor.y, visibleFrame.minY + menuSize.height),
+            visibleFrame.maxY
+        )
+        return NSPoint(x: x, y: y)
+    }
+}
+
 final class AppDelegate: NSObject, NSApplicationDelegate {
     private let sleepPreventer = SleepPreventer()
     private let activityNudger = ActivityNudger()
-    private let teamsActivityEnabledKey = "teamsActivityEnabled"
+    private let isOnKey = "hyperZenIsOn"
 
     private var statusItem: NSStatusItem?
-    private var keepAwakeMenuItem: NSMenuItem?
-    private var teamsActivityMenuItem: NSMenuItem?
-    private var powerStatusMenuItem: NSMenuItem?
-    private var teamsStatusMenuItem: NSMenuItem?
+    private var statusMenu: NSMenu?
+    private var onOffMenuItem: NSMenuItem?
+    private var statusMenuItem: NSMenuItem?
     private var accessibilityStatusMenuItem: NSMenuItem?
 
-    private var mainWindow: NSWindow?
-    private var keepAwakeCheckbox: NSButton?
-    private var teamsActivityCheckbox: NSButton?
-    private var powerStatusLabel: NSTextField?
-    private var teamsStatusLabel: NSTextField?
-    private var accessibilityStatusLabel: NSTextField?
-
     private var hasAccessibility = false
-    private var teamsActivityRequested = true
+    private var isOn = true
     private var screensAsleep = false
     private let appLaunchedAt = Date()
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.applicationIconImage = IconRenderer.makeAppIcon(size: 512)
-        teamsActivityRequested = UserDefaults.standard.object(forKey: teamsActivityEnabledKey) as? Bool ?? true
+        isOn = UserDefaults.standard.object(forKey: isOnKey) as? Bool ?? true
 
         setupStatusItem()
-        setupMainWindow()
         scheduleMenuBarVisibilityCheck()
         observeScreenSleep()
 
         hasAccessibility = AccessibilityGuard.isTrusted
-        enableKeepAwakeByDefault()
-        reconcileTeamsActivity()
+        applyOnOffState()
         updateUI()
-        showMainWindow(nil)
 
-        if teamsActivityRequested && !hasAccessibility {
+        if isOn && !hasAccessibility {
             DispatchQueue.main.async {
                 AccessibilityGuard.requestSystemPrompt()
             }
+        }
+
+        DispatchQueue.main.async {
+            self.showDropdown(nil)
         }
     }
 
@@ -102,7 +116,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         _ sender: NSApplication,
         hasVisibleWindows flag: Bool
     ) -> Bool {
-        showMainWindow(nil)
+        showDropdown(nil)
         return true
     }
 
@@ -114,7 +128,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     @objc private func recheckAccessibility() {
         hasAccessibility = AccessibilityGuard.isTrusted
-        reconcileTeamsActivity()
+        reconcileActivityNudger()
         updateUI()
     }
 
@@ -136,13 +150,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     @objc private func screensDidSleep() {
         screensAsleep = true
-        reconcileTeamsActivity()
+        reconcileActivityNudger()
         updateUI()
     }
 
     @objc private func screensDidWake() {
         screensAsleep = false
-        reconcileTeamsActivity()
+        reconcileActivityNudger()
         updateUI()
     }
 
@@ -151,7 +165,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         item.autosaveName = "HyperZen"
         item.isVisible = true
         let indicator = MenuBarIndicatorState(
-            teamsActivityRequested: teamsActivityRequested,
+            isOn: isOn,
             hasAccessibility: hasAccessibility
         )
         item.button?.image = indicator.makeImage()
@@ -161,38 +175,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let menu = NSMenu()
         menu.delegate = self
 
-        let showItem = NSMenuItem(
-            title: "Show HyperZen",
-            action: #selector(showMainWindow(_:)),
+        let onOffItem = NSMenuItem(
+            title: "On",
+            action: #selector(toggleOnOff(_:)),
             keyEquivalent: ""
         )
-        showItem.target = self
-        menu.addItem(showItem)
-        menu.addItem(.separator())
-
-        let keepAwakeItem = NSMenuItem(
-            title: "Keep Mac Awake",
-            action: #selector(toggleKeepAwake(_:)),
-            keyEquivalent: ""
-        )
-        keepAwakeItem.target = self
-        menu.addItem(keepAwakeItem)
-        keepAwakeMenuItem = keepAwakeItem
-
-        let teamsItem = NSMenuItem(
-            title: "Keep Teams Active",
-            action: #selector(toggleTeamsActivity(_:)),
-            keyEquivalent: ""
-        )
-        teamsItem.target = self
-        menu.addItem(teamsItem)
-        teamsActivityMenuItem = teamsItem
+        onOffItem.target = self
+        menu.addItem(onOffItem)
+        onOffMenuItem = onOffItem
 
         menu.addItem(.separator())
-        powerStatusMenuItem = addDisabledItem("Power Assertions: Disabled", to: menu)
-        teamsStatusMenuItem = addDisabledItem("Teams Activity: Disabled", to: menu)
+        statusMenuItem = addDisabledItem("Status: Off", to: menu)
         accessibilityStatusMenuItem = addDisabledItem("Accessibility: Checking…", to: menu)
-        addDisabledItem("Input nudge: Every 60 seconds", to: menu)
 
         let settingsItem = NSMenuItem(
             title: "Open Accessibility Settings",
@@ -213,158 +207,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         item.menu = menu
         statusItem = item
-    }
-
-    private func setupMainWindow() {
-        let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 560, height: 500),
-            styleMask: [.titled, .closable, .miniaturizable],
-            backing: .buffered,
-            defer: false
-        )
-        window.title = "HyperZen"
-        window.isReleasedWhenClosed = false
-        window.setFrameAutosaveName("HyperZenMainWindow")
-        window.center()
-
-        let contentView = NSView()
-        window.contentView = contentView
-
-        let rootStack = NSStackView()
-        rootStack.orientation = .vertical
-        rootStack.alignment = .leading
-        rootStack.spacing = 18
-        rootStack.translatesAutoresizingMaskIntoConstraints = false
-        contentView.addSubview(rootStack)
-
-        NSLayoutConstraint.activate([
-            rootStack.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 28),
-            rootStack.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -28),
-            rootStack.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 26),
-            rootStack.bottomAnchor.constraint(lessThanOrEqualTo: contentView.bottomAnchor, constant: -24),
-        ])
-
-        let iconView = NSImageView(image: IconRenderer.makeAppIcon(size: 72))
-        iconView.translatesAutoresizingMaskIntoConstraints = false
-        NSLayoutConstraint.activate([
-            iconView.widthAnchor.constraint(equalToConstant: 72),
-            iconView.heightAnchor.constraint(equalToConstant: 72),
-        ])
-
-        let titleLabel = makeLabel("HyperZen", font: .systemFont(ofSize: 28, weight: .semibold))
-        let subtitleLabel = makeLabel(
-            "Keep your Mac awake and your collaboration presence active.",
-            color: .secondaryLabelColor
-        )
-        let titleStack = NSStackView(views: [titleLabel, subtitleLabel])
-        titleStack.orientation = .vertical
-        titleStack.alignment = .leading
-        titleStack.spacing = 5
-
-        let headerStack = NSStackView(views: [iconView, titleStack])
-        headerStack.orientation = .horizontal
-        headerStack.alignment = .centerY
-        headerStack.spacing = 18
-        rootStack.addArrangedSubview(headerStack)
-
-        let separator = NSBox()
-        separator.boxType = .separator
-        separator.translatesAutoresizingMaskIntoConstraints = false
-        rootStack.addArrangedSubview(separator)
-        separator.widthAnchor.constraint(equalTo: rootStack.widthAnchor).isActive = true
-
-        let keepAwakeButton = NSButton(
-            checkboxWithTitle: "Keep Mac Awake",
-            target: self,
-            action: #selector(toggleKeepAwake(_:))
-        )
-        keepAwakeButton.font = .systemFont(ofSize: 16, weight: .medium)
-        keepAwakeCheckbox = keepAwakeButton
-        let keepAwakeStack = makeFeatureStack(
-            control: keepAwakeButton,
-            help: "Prevents idle system sleep and display sleep.\nWorks without Accessibility permission."
-        )
-        rootStack.addArrangedSubview(keepAwakeStack)
-        keepAwakeStack.widthAnchor.constraint(equalTo: rootStack.widthAnchor).isActive = true
-
-        let teamsButton = NSButton(
-            checkboxWithTitle: "Keep Teams Active",
-            target: self,
-            action: #selector(toggleTeamsActivity(_:))
-        )
-        teamsButton.font = .systemFont(ofSize: 16, weight: .medium)
-        teamsActivityCheckbox = teamsButton
-        let teamsStack = makeFeatureStack(
-            control: teamsButton,
-            help: "Declares activity and performs a one-pixel move-and-return every 60 seconds.\nRequires Accessibility."
-        )
-        rootStack.addArrangedSubview(teamsStack)
-        teamsStack.widthAnchor.constraint(equalTo: rootStack.widthAnchor).isActive = true
-
-        let statusTitle = makeLabel("Live Status", font: .systemFont(ofSize: 15, weight: .semibold))
-        rootStack.addArrangedSubview(statusTitle)
-
-        let powerValue = makeLabel("Disabled", color: .secondaryLabelColor)
-        let teamsValue = makeLabel("Disabled", color: .secondaryLabelColor)
-        let accessibilityValue = makeLabel("Checking…", color: .secondaryLabelColor)
-        powerStatusLabel = powerValue
-        teamsStatusLabel = teamsValue
-        accessibilityStatusLabel = accessibilityValue
-
-        let statusStack = NSStackView(views: [
-            makeStatusRow(title: "Power assertions", value: powerValue),
-            makeStatusRow(title: "Teams activity", value: teamsValue),
-            makeStatusRow(title: "Accessibility", value: accessibilityValue),
-            makeStatusRow(title: "Input nudge", value: makeLabel("Every 60 seconds")),
-        ])
-        statusStack.orientation = .vertical
-        statusStack.alignment = .leading
-        statusStack.spacing = 8
-        rootStack.addArrangedSubview(statusStack)
-        statusStack.leadingAnchor.constraint(equalTo: rootStack.leadingAnchor).isActive = true
-
-        let settingsButton = NSButton(
-            title: "Open Accessibility Settings",
-            target: self,
-            action: #selector(openAccessibilitySettings(_:))
-        )
-        rootStack.addArrangedSubview(settingsButton)
-
-        mainWindow = window
-    }
-
-    private func makeFeatureStack(control: NSButton, help: String) -> NSStackView {
-        let helpLabels = help.components(separatedBy: "\n").map {
-            makeLabel($0, color: .secondaryLabelColor)
-        }
-        let stack = NSStackView(views: [control] + helpLabels)
-        stack.orientation = .vertical
-        stack.alignment = .leading
-        stack.spacing = 4
-        return stack
-    }
-
-    private func makeStatusRow(title: String, value: NSTextField) -> NSStackView {
-        let titleLabel = makeLabel(title, color: .secondaryLabelColor)
-        titleLabel.translatesAutoresizingMaskIntoConstraints = false
-        titleLabel.widthAnchor.constraint(equalToConstant: 140).isActive = true
-
-        let row = NSStackView(views: [titleLabel, value])
-        row.orientation = .horizontal
-        row.alignment = .firstBaseline
-        row.spacing = 18
-        return row
-    }
-
-    private func makeLabel(
-        _ text: String,
-        font: NSFont = .systemFont(ofSize: NSFont.systemFontSize),
-        color: NSColor = .labelColor
-    ) -> NSTextField {
-        let label = NSTextField(labelWithString: text)
-        label.font = font
-        label.textColor = color
-        return label
+        statusMenu = menu
     }
 
     @discardableResult
@@ -394,49 +237,41 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         updateUI()
     }
 
-    private func enableKeepAwakeByDefault() {
-        do {
-            try setKeepAwakeEnabled(true)
-        } catch {
-            showErrorAlert(message: error.localizedDescription)
-        }
+    @objc private func toggleOnOff(_ sender: Any?) {
+        setOn(!isOn)
     }
 
-    @objc private func toggleKeepAwake(_ sender: Any?) {
-        do {
-            try setKeepAwakeEnabled(!sleepPreventer.isEnabled)
-            updateUI()
-        } catch {
-            showErrorAlert(message: error.localizedDescription)
-        }
-    }
-
-    private func setKeepAwakeEnabled(_ enabled: Bool) throws {
-        if enabled {
-            try sleepPreventer.enable()
-        } else {
-            sleepPreventer.disable()
-        }
-    }
-
-    @objc private func toggleTeamsActivity(_ sender: Any?) {
-        teamsActivityRequested.toggle()
-        UserDefaults.standard.set(teamsActivityRequested, forKey: teamsActivityEnabledKey)
+    private func setOn(_ enabled: Bool) {
+        isOn = enabled
+        UserDefaults.standard.set(isOn, forKey: isOnKey)
         hasAccessibility = AccessibilityGuard.isTrusted
-        reconcileTeamsActivity()
+        applyOnOffState()
         updateUI()
 
-        if teamsActivityRequested && !hasAccessibility {
+        if isOn && !hasAccessibility {
             DispatchQueue.main.async {
-                self.hasAccessibility = AccessibilityGuard.requireAccessForTeamsActivity()
-                self.reconcileTeamsActivity()
+                self.hasAccessibility = AccessibilityGuard.requireAccessForActivity(presentWarning: true)
+                self.reconcileActivityNudger()
                 self.updateUI()
             }
         }
     }
 
-    private func reconcileTeamsActivity() {
-        let shouldRun = teamsActivityRequested && hasAccessibility && !screensAsleep
+    private func applyOnOffState() {
+        do {
+            if isOn {
+                try sleepPreventer.enable()
+            } else {
+                sleepPreventer.disable()
+            }
+        } catch {
+            showErrorAlert(message: error.localizedDescription)
+        }
+        reconcileActivityNudger()
+    }
+
+    private func reconcileActivityNudger() {
+        let shouldRun = isOn && hasAccessibility && !screensAsleep
         if shouldRun {
             activityNudger.start()
         } else {
@@ -444,10 +279,23 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
-    @objc private func showMainWindow(_ sender: Any?) {
-        guard let mainWindow else { return }
+    @objc private func showDropdown(_ sender: Any?) {
         NSApp.activate(ignoringOtherApps: true)
-        mainWindow.makeKeyAndOrderFront(nil)
+        recheckAccessibility()
+
+        guard let statusMenu else { return }
+        let cursor = NSEvent.mouseLocation
+        guard let screen = NSScreen.screens.first(where: { $0.frame.contains(cursor) }) ?? NSScreen.main else {
+            statusMenu.popUp(positioning: nil, at: cursor, in: nil)
+            return
+        }
+
+        let point = MenuPopupPlacement.point(
+            cursor: cursor,
+            menuSize: statusMenu.size,
+            visibleFrame: screen.visibleFrame
+        )
+        statusMenu.popUp(positioning: nil, at: point, in: nil)
     }
 
     @objc private func openAccessibilitySettings(_ sender: Any?) {
@@ -458,67 +306,41 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         NSApplication.shared.terminate(nil)
     }
 
-    private var teamsStatusText: String {
-        if !teamsActivityRequested {
-            return "Disabled"
+    private var statusText: String {
+        if !isOn {
+            return "Off"
         }
         if !hasAccessibility {
-            return "Needs Accessibility"
+            return "On — needs Accessibility for input"
         }
         if screensAsleep {
-            return "Paused while display sleeps"
+            return "On — paused while display sleeps"
         }
-        return activityNudger.isRunning ? "Active" : "Inactive"
+        let power = sleepPreventer.isEnabled ? "awake" : "assertions unavailable"
+        let nudge = activityNudger.isRunning ? "nudging" : "idle"
+        return "On — \(power), \(nudge)"
     }
 
     private func updateUI() {
-        let keepAwakeEnabled = sleepPreventer.isEnabled
+        onOffMenuItem?.title = isOn ? "On" : "Off"
+        onOffMenuItem?.state = isOn ? .on : .off
 
-        keepAwakeMenuItem?.state = keepAwakeEnabled ? .on : .off
-        teamsActivityMenuItem?.state = teamsActivityRequested ? .on : .off
-        keepAwakeCheckbox?.state = keepAwakeEnabled ? .on : .off
-        teamsActivityCheckbox?.state = teamsActivityRequested ? .on : .off
-
-        let powerText = keepAwakeEnabled ? "Enabled" : "Disabled"
-        let teamsText = teamsStatusText
         let accessibilityText = hasAccessibility ? "Allowed" : "Not Allowed"
-
-        powerStatusMenuItem?.title = "Power Assertions: \(powerText)"
-        teamsStatusMenuItem?.title = "Teams Activity: \(teamsText)"
+        statusMenuItem?.title = "Status: \(statusText)"
         accessibilityStatusMenuItem?.title = "Accessibility: \(accessibilityText)"
 
-        powerStatusLabel?.stringValue = powerText
-        powerStatusLabel?.textColor = keepAwakeEnabled ? .systemGreen : .secondaryLabelColor
-        teamsStatusLabel?.stringValue = teamsText
-        teamsStatusLabel?.textColor = teamsStatusColor
-        accessibilityStatusLabel?.stringValue = accessibilityText
-        accessibilityStatusLabel?.textColor = hasAccessibility ? .systemGreen : .systemRed
-
         let indicator = MenuBarIndicatorState(
-            teamsActivityRequested: teamsActivityRequested,
+            isOn: isOn,
             hasAccessibility: hasAccessibility
         )
         statusItem?.button?.image = indicator.makeImage()
         statusItem?.button?.contentTintColor = indicator.tintColor
-        statusItem?.button?.toolTip = "HyperZen — \(indicator.label) — Power: \(powerText), Teams: \(teamsText)"
-    }
-
-    private var teamsStatusColor: NSColor {
-        if !teamsActivityRequested {
-            return .secondaryLabelColor
-        }
-        if !hasAccessibility {
-            return .systemRed
-        }
-        if screensAsleep {
-            return .systemOrange
-        }
-        return activityNudger.isRunning ? .systemGreen : .secondaryLabelColor
+        statusItem?.button?.toolTip = "HyperZen — \(indicator.label)"
     }
 
     private func showErrorAlert(message: String) {
         let alert = NSAlert()
-        alert.messageText = "Could Not Update Keep Awake"
+        alert.messageText = "Could Not Update On/Off"
         alert.informativeText = message
         alert.alertStyle = .warning
         alert.addButton(withTitle: "OK")

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Preview Icons"
+  short_description: "Compare stateful Apple icons at menu-bar size"
+  default_prompt: "Use $preview-icon to compare Apple SF Symbol sets for multiple application states."

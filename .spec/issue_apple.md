@@ -66,7 +66,7 @@ codesign --force --deep --sign "$SIGN_IDENTITY" "$APP_DIR"
 | GitHub Release | `Scripts/bundle-app.sh release` on tag push | Ad-hoc (no `APPLE_SIGNING_IDENTITY` secret) |
 | Homebrew cask | Downloads DMG from GitHub Release | Same ad-hoc binary |
 | Local app build | `task dev` / `task build` | Ad-hoc |
-| Xcode debug | `HyperZen.xcodeproj` (if used) | Usually “Sign to Run Locally” / Personal Team — **different** from brew |
+| Xcode debug | `Hyperzen.xcodeproj` (if used) | Usually “Sign to Run Locally” / Personal Team — **different** from brew |
 
 `--deep` re-signs nested code; errors are swallowed (`2>/dev/null || true`), so a failed real signing attempt could still fall through — today the default is intentionally ad-hoc.
 
