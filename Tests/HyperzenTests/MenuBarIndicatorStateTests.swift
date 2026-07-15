@@ -4,15 +4,15 @@ import Testing
 
 @Suite("Menu Bar Indicator State")
 struct MenuBarIndicatorStateTests {
-    @Test("Teams state maps to active, disabled, and blocked indicators", arguments: [
-        (requested: true, allowed: true, expected: MenuBarIndicatorState.active),
-        (requested: false, allowed: true, expected: MenuBarIndicatorState.disabled),
-        (requested: false, allowed: false, expected: MenuBarIndicatorState.disabled),
-        (requested: true, allowed: false, expected: MenuBarIndicatorState.blocked),
+    @Test("On/Off state maps to active, disabled, and blocked indicators", arguments: [
+        (isOn: true, allowed: true, expected: MenuBarIndicatorState.active),
+        (isOn: false, allowed: true, expected: MenuBarIndicatorState.disabled),
+        (isOn: false, allowed: false, expected: MenuBarIndicatorState.disabled),
+        (isOn: true, allowed: false, expected: MenuBarIndicatorState.blocked),
     ])
-    func stateMapping(testCase: (requested: Bool, allowed: Bool, expected: MenuBarIndicatorState)) {
+    func stateMapping(testCase: (isOn: Bool, allowed: Bool, expected: MenuBarIndicatorState)) {
         let actual = MenuBarIndicatorState(
-            teamsActivityRequested: testCase.requested,
+            isOn: testCase.isOn,
             hasAccessibility: testCase.allowed
         )
 
@@ -22,9 +22,9 @@ struct MenuBarIndicatorStateTests {
     @Test("Playback symbols and labels identify every static state")
     func playbackSymbols() {
         #expect(MenuBarIndicatorState.active.symbolName == "play.fill")
-        #expect(MenuBarIndicatorState.active.label == "Active")
+        #expect(MenuBarIndicatorState.active.label == "On")
         #expect(MenuBarIndicatorState.disabled.symbolName == "pause.fill")
-        #expect(MenuBarIndicatorState.disabled.label == "Disabled")
+        #expect(MenuBarIndicatorState.disabled.label == "Off")
         #expect(MenuBarIndicatorState.blocked.symbolName == "stop.fill")
         #expect(MenuBarIndicatorState.blocked.label == "Blocked")
     }
