@@ -19,13 +19,13 @@ struct MenuBarIndicatorStateTests {
         #expect(actual == testCase.expected)
     }
 
-    @Test("Playback symbols and labels identify every static state")
-    func playbackSymbols() {
-        #expect(MenuBarIndicatorState.active.symbolName == "play.fill")
+    @Test("Presence symbols and labels identify every static state")
+    func presenceSymbols() {
+        #expect(MenuBarIndicatorState.active.symbolName == "eye.fill")
         #expect(MenuBarIndicatorState.active.label == "On")
-        #expect(MenuBarIndicatorState.disabled.symbolName == "pause.fill")
+        #expect(MenuBarIndicatorState.disabled.symbolName == "eye.slash.fill")
         #expect(MenuBarIndicatorState.disabled.label == "Off")
-        #expect(MenuBarIndicatorState.blocked.symbolName == "stop.fill")
+        #expect(MenuBarIndicatorState.blocked.symbolName == "xmark")
         #expect(MenuBarIndicatorState.blocked.label == "Blocked")
     }
 

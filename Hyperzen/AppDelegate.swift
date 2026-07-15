@@ -17,9 +17,9 @@ enum MenuBarIndicatorState: CaseIterable, Equatable {
 
     var symbolName: String {
         switch self {
-        case .active: "play.fill"
-        case .disabled: "pause.fill"
-        case .blocked: "stop.fill"
+        case .active: "eye.fill"
+        case .disabled: "eye.slash.fill"
+        case .blocked: "xmark"
         }
     }
 
