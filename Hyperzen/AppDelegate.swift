@@ -55,34 +55,12 @@ enum MenuBarIndicatorState: CaseIterable, Equatable {
     }
 }
 
-struct MenuPopupPlacement {
-    /// Returns the screen point for a menu whose first item is positioned at the point.
-    ///
-    /// A launcher click can occur near a screen edge. Raising the point by the menu
-    /// height keeps the menu within the visible frame instead of relying on AppKit
-    /// to recover from an off-screen presentation.
-    static func point(
-        cursor: NSPoint,
-        menuSize: NSSize,
-        visibleFrame: NSRect
-    ) -> NSPoint {
-        let maximumX = max(visibleFrame.minX, visibleFrame.maxX - menuSize.width)
-        let x = min(max(cursor.x, visibleFrame.minX), maximumX)
-        let y = min(
-            max(cursor.y, visibleFrame.minY + menuSize.height),
-            visibleFrame.maxY
-        )
-        return NSPoint(x: x, y: y)
-    }
-}
-
 final class AppDelegate: NSObject, NSApplicationDelegate {
     private let sleepPreventer = SleepPreventer()
     private let activityNudger = ActivityNudger()
     private let isOnKey = "hyperZenIsOn"
 
     private var statusItem: NSStatusItem?
-    private var statusMenu: NSMenu?
     private var onOffMenuItem: NSMenuItem?
     private var statusMenuItem: NSMenuItem?
     private var accessibilityStatusMenuItem: NSMenuItem?
@@ -213,7 +191,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         item.menu = menu
         statusItem = item
-        statusMenu = menu
     }
 
     @discardableResult
@@ -289,19 +266,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         NSApp.activate(ignoringOtherApps: true)
         recheckAccessibility()
 
-        guard let statusMenu else { return }
-        let cursor = NSEvent.mouseLocation
-        guard let screen = NSScreen.screens.first(where: { $0.frame.contains(cursor) }) ?? NSScreen.main else {
-            statusMenu.popUp(positioning: nil, at: cursor, in: nil)
-            return
-        }
-
-        let point = MenuPopupPlacement.point(
-            cursor: cursor,
-            menuSize: statusMenu.size,
-            visibleFrame: screen.visibleFrame
-        )
-        statusMenu.popUp(positioning: nil, at: point, in: nil)
+        // Open from the menu-bar icon (same as a status-item click), not at the cursor.
+        // Launcher / Spotlight reopen must not float a menu under the pointer.
+        guard let button = statusItem?.button else { return }
+        button.performClick(nil)
     }
 
     @objc private func openAccessibilitySettings(_ sender: Any?) {

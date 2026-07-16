@@ -95,7 +95,7 @@ swift test
 
 ## Usage
 
-1. Launch HyperZen from Applications, Spotlight, or Launchpad; its dropdown opens near the pointer without adding a Dock icon.
+1. Launch HyperZen from Applications, Spotlight, or Launchpad; its dropdown opens from the menu-bar icon without adding a Dock icon.
 2. Use the single **On** / **Off** toggle. On enables power assertions and the input nudge together; Off stops both.
 3. Reopen the dropdown at any time from Launchpad, Spotlight, Applications, or the menu-bar icon.
 4. Grant Accessibility so the input nudge can run; power assertions still work when On without it (icon shows Blocked / red until Accessibility is allowed).

@@ -17,10 +17,9 @@ macOS places third-party `NSStatusItem` icons right-to-left, after the focused a
 HyperZen remains discoverable from Launchpad, Spotlight, and Applications, but uses the accessory activation policy so it does not stay in the Dock. Its controls live in one shared dropdown:
 
 - Click the **menu-bar icon** for the normal status-item dropdown.
-- Reopen HyperZen from **Launchpad**, **Spotlight**, or **Applications** to open the same dropdown near the pointer.
-- HyperZen clamps the menu to the active screen's visible frame.
+- Reopen HyperZen from **Launchpad**, **Spotlight**, or **Applications** to open that **same** dropdown from the menu-bar icon (not under the pointer).
 
-This is the supported recovery path when the status item is hidden behind the notch or crowded out of reach. It does not depend on trying to control AppKit's system-owned menu-bar layout.
+This is the supported recovery path when the status item is hard to find (crowded bar / notch). It does not depend on trying to control AppKit's system-owned menu-bar layout.
 
 The user can still hold **⌘ Cmd** and drag a visible menu-bar icon; its `autosaveName` preserves that placement across relaunches.
 
@@ -36,5 +35,5 @@ The user can still hold **⌘ Cmd** and drag a visible menu-bar icon; its `autos
 
 ## References
 
-- `Hyperzen/AppDelegate.swift` — creates the shared status menu and presents it from launcher reopen events
+- `Hyperzen/AppDelegate.swift` — creates the shared status menu; launcher reopen calls `performClick` on the status-item button
 - `Hyperzen/MenuBarVisibilityWatcher.swift` — detects when macOS blocks the icon and presents recovery guidance
